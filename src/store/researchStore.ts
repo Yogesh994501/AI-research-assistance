@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { nanoid } from 'nanoid';
-import type { ResearchState, GraphNode, GraphEdge, ResearchResponse, IngestResponse, Session } from '@/types';
+import type { ResearchState, GraphNode, GraphEdge, ResearchResponse, IngestResponse, Session, AgentState } from '@/types';
 
 const NODE_COLORS: Record<string, string> = {
   query: '#06b6d4',    // cyan
@@ -15,6 +15,10 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
   edges: [],
   activeNodeId: null,
   hoveredNodeId: null,
+  targetCameraPosition: null,
+
+  // Agent State
+  agentState: 'idle',
 
   // UI
   isResearching: false,
@@ -51,10 +55,10 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
     const newNodes: GraphNode[] = [queryNode];
     const newEdges: GraphEdge[] = [];
 
-    // Source nodes — arranged in a hemisphere
+    // Source nodes — arranged in outer orbital shell
     response.sources.forEach((src, i) => {
       const angle = (i / Math.max(response.sources.length, 1)) * Math.PI * 2;
-      const radius = 4 + Math.random() * 2;
+      const radius = 5 + Math.random() * 2;
       const nodeId = nanoid();
       newNodes.push({
         id: nodeId,
@@ -66,6 +70,8 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
         summary: src.snippet,
         url: src.url,
         relevanceScore: src.relevanceScore,
+        citationCount: src.citationCount,
+        doi: src.doi,
         parentId: queryNodeId,
         color: NODE_COLORS.source,
       });
@@ -80,7 +86,7 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
     // Concept nodes — arranged in inner ring
     response.concepts.forEach((concept, i) => {
       const angle = (i / Math.max(response.concepts.length, 1)) * Math.PI * 2 + Math.PI / 6;
-      const radius = 2.5 + Math.random();
+      const radius = 3 + Math.random();
       const nodeId = nanoid();
       newNodes.push({
         id: nodeId,
@@ -115,6 +121,7 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
       activeNodeId: queryNodeId,
       detailDrawerOpen: true,
       isResearching: false,
+      agentState: 'complete',
       streamingText: '',
     });
   },
@@ -153,18 +160,33 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
     set({
       nodes: [...state.nodes, ...newNodes],
       edges: [...state.edges, ...newEdges],
+      agentState: 'complete',
     });
   },
 
-  selectNode: (id) => set({ activeNodeId: id, detailDrawerOpen: id !== null }),
+  selectNode: (id) => {
+    const state = get();
+    const node = state.nodes.find((n) => n.id === id);
+    let cameraPos: [number, number, number] | null = null;
+    if (node) {
+      // Offset camera position facing target node
+      cameraPos = [node.x * 1.3, node.y + 1, node.z + 5];
+    }
+    set({ 
+      activeNodeId: id, 
+      detailDrawerOpen: id !== null,
+      targetCameraPosition: cameraPos,
+    });
+  },
   hoverNode: (id) => set({ hoveredNodeId: id }),
-  setResearching: (v) => set({ isResearching: v }),
+  setAgentState: (s: AgentState) => set({ agentState: s }),
+  setResearching: (v) => set({ isResearching: v, agentState: v ? 'searching' : 'idle' }),
   setStreamingText: (t) => set({ streamingText: t }),
   setResearchMode: (m) => set({ researchMode: m }),
   toggleSearchPanel: () => set((s) => ({ searchPanelOpen: !s.searchPanelOpen })),
   toggleDetailDrawer: () => set((s) => ({ detailDrawerOpen: !s.detailDrawerOpen })),
   toggleHistoryPanel: () => set((s) => ({ historyPanelOpen: !s.historyPanelOpen })),
   toggleSettingsPanel: () => set((s) => ({ settingsPanelOpen: !s.settingsPanelOpen })),
-  clearGraph: () => set({ nodes: [], edges: [], activeNodeId: null, hoveredNodeId: null, detailDrawerOpen: false }),
+  clearGraph: () => set({ nodes: [], edges: [], activeNodeId: null, hoveredNodeId: null, detailDrawerOpen: false, agentState: 'idle' }),
   loadSession: (session, nodes, edges) => set({ nodes, edges, currentSessionId: session.id, activeNodeId: null }),
 }));

@@ -20,7 +20,13 @@ export default function GraphNode3D({ node }: GraphNode3DProps) {
   const activeNodeId = useResearchStore((s) => s.activeNodeId);
 
   const isActive = activeNodeId === node.id;
-  const targetScale = isActive || hovered ? 1.5 : 1;
+
+  // Scale node based on citation count if available
+  const citationFactor = node.citationCount 
+    ? Math.min(1.8, 0.8 + Math.log10(node.citationCount + 1) * 0.35) 
+    : 1;
+
+  const targetScale = (isActive || hovered ? 1.5 : 1) * citationFactor;
 
   useFrame((_, delta) => {
     if (!meshRef.current) return;
@@ -37,7 +43,7 @@ export default function GraphNode3D({ node }: GraphNode3DProps) {
     switch (node.type) {
       case 'query': return [0.8, 32, 32] as const; // Sphere
       case 'concept': return [0.5, 1] as const;   // Icosahedron
-      case 'source': return [0.4, 32, 32] as const; // Sphere
+      case 'source': return [0.45, 32, 32] as const; // Sphere
       case 'document': return [0.6, 0] as const;  // Dodecahedron
       default: return [0.5, 32, 32] as const;
     }
@@ -57,7 +63,7 @@ export default function GraphNode3D({ node }: GraphNode3DProps) {
           hoverNode(node.id);
           document.body.style.cursor = 'pointer';
         }}
-        onPointerOut={(e) => {
+        onPointerOut={() => {
           setHovered(false);
           hoverNode(null);
           document.body.style.cursor = 'auto';
@@ -74,7 +80,7 @@ export default function GraphNode3D({ node }: GraphNode3DProps) {
         <meshStandardMaterial
           color={node.color || '#fff'}
           emissive={node.color || '#fff'}
-          emissiveIntensity={isActive ? 2 : hovered ? 1 : 0.5}
+          emissiveIntensity={isActive ? 2.2 : hovered ? 1.4 : 0.6}
           roughness={0.2}
           metalness={0.8}
           transparent
@@ -85,8 +91,8 @@ export default function GraphNode3D({ node }: GraphNode3DProps) {
       {/* HTML Tooltip Overlay */}
       <Html distanceFactor={15} center zIndexRange={[100, 0]} style={{ pointerEvents: 'none' }}>
         <div 
-          className={`px-3 py-1.5 rounded-lg backdrop-blur-md border border-white/10 transition-all duration-300 whitespace-nowrap
-            ${hovered || isActive ? 'opacity-100 translate-y-[-30px]' : 'opacity-0 translate-y-0'}
+          className={`px-3 py-1.5 rounded-lg backdrop-blur-md border border-white/10 transition-all duration-300 whitespace-nowrap flex items-center gap-2
+            ${hovered || isActive ? 'opacity-100 translate-y-[-32px]' : 'opacity-0 translate-y-0'}
             ${node.type === 'query' ? 'bg-cyan-500/20 text-cyan-100' : 
               node.type === 'concept' ? 'bg-violet-500/20 text-violet-100' :
               node.type === 'document' ? 'bg-yellow-500/20 text-yellow-100' :
@@ -96,6 +102,11 @@ export default function GraphNode3D({ node }: GraphNode3DProps) {
           <div className="text-xs font-medium tracking-wide drop-shadow-md">
             {node.label}
           </div>
+          {node.citationCount !== undefined && (
+            <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-cyan-300 font-mono">
+              {node.citationCount} citations
+            </span>
+          )}
         </div>
       </Html>
     </group>

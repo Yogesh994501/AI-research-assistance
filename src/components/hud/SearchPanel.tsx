@@ -10,6 +10,8 @@ export default function SearchPanel() {
   
   const isResearching = useResearchStore((s) => s.isResearching);
   const setResearching = useResearchStore((s) => s.setResearching);
+  const setAgentState = useResearchStore((s) => s.setAgentState);
+  const agentState = useResearchStore((s) => s.agentState);
   const addResearchResult = useResearchStore((s) => s.addResearchResult);
   const researchMode = useResearchStore((s) => s.researchMode);
   const setResearchMode = useResearchStore((s) => s.setResearchMode);
@@ -20,12 +22,15 @@ export default function SearchPanel() {
     if (!query.trim() || isResearching) return;
 
     setResearching(true);
+    setAgentState('searching');
     try {
+      setTimeout(() => setAgentState('synthesizing'), 1200);
       const res = await axios.post('/api/research', { query, mode: researchMode });
       addResearchResult(query, res.data);
       setQuery('');
     } catch (err) {
       console.error('Research failed', err);
+      setAgentState('idle');
     } finally {
       setResearching(false);
     }
@@ -36,6 +41,7 @@ export default function SearchPanel() {
     if (!file) return;
 
     setResearching(true);
+    setAgentState('searching');
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -43,8 +49,17 @@ export default function SearchPanel() {
       addDocument(res.data);
     } catch (err) {
       console.error('Upload failed', err);
+      setAgentState('idle');
     } finally {
       setResearching(false);
+    }
+  };
+
+  const getStatusLabel = () => {
+    switch (agentState) {
+      case 'searching': return 'Querying OpenAlex, arXiv & Semantic Scholar...';
+      case 'synthesizing': return 'Re-ranking sources & synthesizing report...';
+      default: return 'Ask anything or explore a topic...';
     }
   };
 
@@ -56,15 +71,15 @@ export default function SearchPanel() {
         
         <div className="relative flex items-center bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-2 shadow-2xl">
           <div className="pl-3 pr-2 text-cyan-400">
-            {isResearching ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
+            {isResearching ? <Loader2 className="w-5 h-5 animate-spin text-violet-400" /> : <Sparkles className="w-5 h-5" />}
           </div>
           
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Ask anything or explore a topic..."
-            className="flex-1 bg-transparent border-none outline-none text-gray-100 placeholder:text-gray-500 py-3 text-lg"
+            placeholder={getStatusLabel()}
+            className="flex-1 bg-transparent border-none outline-none text-gray-100 placeholder:text-gray-500 py-3 text-base sm:text-lg"
             disabled={isResearching}
           />
           

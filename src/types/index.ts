@@ -18,6 +18,10 @@ export interface GraphNode {
   relevanceScore?: number;
   parentId?: string;
   color?: string;
+  citationCount?: number;
+  doi?: string;
+  methodology?: string;
+  limitations?: string;
 }
 
 export interface GraphEdge {
@@ -36,6 +40,15 @@ export interface Session {
 }
 
 // ── API Response Types ───────────────────────────────────────────────────────
+export interface PaperComparison {
+  title: string;
+  methodology: string;
+  keyFindings: string;
+  limitations: string;
+  citationCount?: number;
+  doi?: string;
+}
+
 export interface SearchSource {
   id: string;
   title: string;
@@ -44,6 +57,8 @@ export interface SearchSource {
   domain: string;
   publishedAt?: string;
   relevanceScore: number;
+  citationCount?: number;
+  doi?: string;
 }
 
 export interface ResearchResponse {
@@ -51,6 +66,7 @@ export interface ResearchResponse {
   sources: SearchSource[];
   concepts: string[];
   followUps: string[];
+  paperComparisons?: PaperComparison[];
 }
 
 export interface IngestResponse {
@@ -60,6 +76,8 @@ export interface IngestResponse {
   concepts: string[];
 }
 
+export type AgentState = 'idle' | 'searching' | 'synthesizing' | 'complete';
+
 // ── Store State ──────────────────────────────────────────────────────────────
 export interface ResearchState {
   // Graph
@@ -67,6 +85,10 @@ export interface ResearchState {
   edges: GraphEdge[];
   activeNodeId: string | null;
   hoveredNodeId: string | null;
+  targetCameraPosition: [number, number, number] | null;
+
+  // Agent State
+  agentState: AgentState;
 
   // UI State
   isResearching: boolean;
@@ -88,6 +110,7 @@ export interface ResearchState {
   addDocument: (response: IngestResponse) => void;
   selectNode: (id: string | null) => void;
   hoverNode: (id: string | null) => void;
+  setAgentState: (s: AgentState) => void;
   setResearching: (v: boolean) => void;
   setStreamingText: (t: string) => void;
   setResearchMode: (m: 'quick' | 'deep') => void;
