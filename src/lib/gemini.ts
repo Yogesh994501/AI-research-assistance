@@ -14,7 +14,7 @@ if (apiKey) {
  */
 export async function synthesize(
   query: string,
-  sources: { title: string; url: string; snippet: string; id: string; citationCount?: number; doi?: string }[],
+  sources: { title: string; url: string; snippet: string; id: string; citationCount?: number; doi?: string; publishedAt?: string }[],
   mode: 'quick' | 'deep'
 ): Promise<{ answer: string; concepts: string[]; followUps: string[]; paperComparisons?: PaperComparison[] }> {
   if (!genai) {
@@ -22,28 +22,54 @@ export async function synthesize(
   }
 
   const sourceContext = sources
-    .map((s, i) => `[${i + 1}] ${s.title}\nURL: ${s.url}\n${s.snippet}`)
+    .map((s, i) => `[${i + 1}] ${s.title}\nURL: ${s.url}\nYear: ${s.publishedAt || 'N/A'}\nCitations: ${s.citationCount || 'N/A'}\nAbstract: ${s.snippet}`)
     .join('\n\n');
 
-  const prompt = `You are an expert research assistant. Synthesize these scholarly sources to answer the user question and produce structured paper comparison extractions.
+  const prompt = `You are a World-Class Academic Research Analyst and Scientific Synthesizer.
+
+Your goal is to evaluate candidate literature retrieved from OpenAlex, Semantic Scholar, arXiv, and Google Scholar to generate an exhaustive, grounded research synthesis.
+
+CRITICAL GROUNDING RULES:
+1. STRICT CITATION MAPPING: Every factual claim, finding, or methodology must be backed by an inline citation marker using [1], [2], etc. corresponding to source numbers below.
+2. NO HALLUCINATIONS: Rely ONLY on the provided context. If the literature does not explicitly state a finding, state "No empirical evidence found in provided corpus."
+3. METRICS EXTRACTOR: Whenever available, extract key statistical parameters, sample sizes, datasets used, and model performance metrics into a clean summary table in Section 2.
+
+RESPONSE STRUCTURE (Write this exact structure inside the "answer" field as Markdown):
+# Scientific Synthesis: ${query}
+
+## 1. Executive Summary
+- Brief 2-3 sentence core synthesis.
+- Bullet points covering primary breakthroughs and state-of-the-art results [1][2].
+
+## 2. Comparative Methodology & Key Findings
+- Synthesize technical approaches across the papers.
+- Markdown table comparing: Paper | Methodology | Dataset/Sample | Key Metric | Citation.
+
+## 3. Contradictions, Limitations & Open Research Questions
+- Identify discrepancies or conflicting findings between studies.
+- Outline gaps highlighted by authors.
+
+## 4. Cited Literature Index
+- Bulleted list of all papers referenced with full Title, Year, Citation Count, and URL link.
 
 QUESTION: ${query}
 MODE: ${mode === 'deep' ? 'Comprehensive analysis' : 'Concise answer'}
 
-SOURCES:
+CANDIDATE LITERATURE:
 ${sourceContext}
 
-Respond with VALID JSON ONLY matching this schema:
+RESPOND WITH VALID JSON ONLY:
 {
-  "answer": "Markdown answer with [1][2] citation markers",
+  "answer": "Complete Markdown response following the exact Scientific Synthesis structure above",
   "concepts": ["Key Concept 1", "Key Concept 2", "Key Concept 3", "Key Concept 4", "Key Concept 5"],
   "followUps": ["Follow-up question 1", "Follow-up question 2", "Follow-up question 3"],
   "paperComparisons": [
     {
       "title": "Paper Title 1",
-      "methodology": "Brief methodology type (e.g. Empirical Benchmark, Theoretical Proof, Meta-Analysis)",
-      "keyFindings": "1-2 sentence core finding",
-      "limitations": "Main limitation or future gap"
+      "methodology": "Methodology",
+      "keyFindings": "Core Finding",
+      "limitations": "Limitation",
+      "citationCount": 100
     }
   ]
 }`;
@@ -52,7 +78,7 @@ Respond with VALID JSON ONLY matching this schema:
     const response = await genai.models.generateContent({
       model,
       contents: prompt,
-      config: { maxOutputTokens: mode === 'deep' ? 4096 : 2048, temperature: 0.7, responseMimeType: 'application/json' },
+      config: { maxOutputTokens: mode === 'deep' ? 4096 : 2048, temperature: 0.5, responseMimeType: 'application/json' },
     });
 
     const raw = response.text || '';
@@ -86,22 +112,48 @@ export async function extractConcepts(text: string): Promise<string[]> {
 }
 
 function getMockSynthesis(query: string, sources: any[] = []) {
-  const topic = query.replace(/^(what is|how does|explain|analyze|tell me about|what are)\s+/i, '');
+  const cleanQuery = query.replace(/^(what is|how does|explain|analyze|tell me about|what are)\s+/i, '');
+  const topic = cleanQuery.charAt(0).toUpperCase() + cleanQuery.slice(1);
+
+  const paperList = sources.length > 0 ? sources : [
+    { title: `[OpenAlex] Advances in ${topic}: System Architecture`, publishedAt: '2025', citationCount: 340, url: 'https://openalex.org' },
+    { title: `[arXiv] Empirical Analysis and Benchmarks of ${topic}`, publishedAt: '2024', citationCount: 180, url: 'https://arxiv.org' },
+    { title: `[Semantic Scholar] ${topic} in Practice: A Comparative Study`, publishedAt: '2025', citationCount: 95, url: 'https://semanticscholar.org' },
+  ];
+
   return {
-    answer: `## Research Summary: ${topic}\n\nRecent advances in **${topic}** show significant progress across multiple domains [1]. Key research demonstrates scalable architectures and optimized performance [2].\n\n### Key Findings\n- Enhanced efficiency through streamlined methodologies [3]\n- Robust reliability under high-demand conditions [4]\n- Strong integration potential with existing frameworks [5]\n\n### Future Outlook\nOngoing research focuses on scalability and real-world deployment of ${topic} technologies [4][5].`,
-    concepts: [`${topic} Fundamentals`, 'Scalability', 'Performance Optimization', 'Integration', 'Future Applications'],
+    answer: `# Scientific Synthesis: ${topic}
+
+## 1. Executive Summary
+- Recent literature on **${topic}** demonstrates rapid architectural convergence toward scalable, fault-tolerant processing models [1][2].
+- Primary breakthroughs achieve up to 40% reduction in computational latency while preserving strict theoretical guarantees [2][3].
+
+## 2. Comparative Methodology & Key Findings
+Synthesized technical approaches reveal a shift from static algorithmic heuristics to dynamic adaptive optimization [1][3].
+
+| Paper | Methodology | Dataset / Sample | Key Metric / Result | Citation |
+| --- | --- | --- | --- | --- |
+| ${paperList[0]?.title || 'Paper 1'} | Empirical Benchmark & Stress Testing | ImageNet / Synthetic 1M | 42% throughput gain | [1] |
+| ${paperList[1]?.title || 'Paper 2'} | Theoretical Proof & Error Bounds | 500k Sample Corpus | 99.4% precision rate | [2] |
+| ${paperList[2]?.title || 'Paper 3'} | Meta-Analysis & Comparative Evaluation | Cross-Domain Benchmark | 1.8x speedup ratio | [3] |
+
+## 3. Contradictions, Limitations & Open Research Questions
+- **Discrepancies**: Studies diverge on latency vs. precision trade-offs under extreme parameter scale [2].
+- **Author Gaps**: Authors explicitly cite limited empirical validation under real-time network jitter [1][3].
+
+## 4. Cited Literature Index
+${paperList.map((p, i) => `- [${i + 1}] **${p.title}** (${p.publishedAt || '2025'}) — Citations: ${p.citationCount || 100} | [Paper Link](${p.url})`).join('\n')}`,
+
+    concepts: [`${topic} Fundamentals`, 'Scalability Bounds', 'Performance Optimization', 'Empirical Benchmarks', 'Future Directions'],
     followUps: [
-      `What are the main challenges in ${topic}?`,
-      `How does ${topic} compare to alternatives?`,
-      `What are future trends in ${topic}?`,
+      `What are the primary theoretical limitations of ${topic}?`,
+      `How do model parameters scale under high throughput workloads?`,
+      `What cross-domain applications show highest empirical promise?`,
     ],
-    paperComparisons: (sources.length > 0 ? sources : [
-      { title: `Paper 1: ${topic} Framework` },
-      { title: `Paper 2: Empirical Evaluation of ${topic}` },
-    ]).map((s: any, i: number) => ({
+    paperComparisons: paperList.map((s: any, i: number) => ({
       title: s.title || `Paper ${i + 1}`,
       methodology: i % 2 === 0 ? 'Empirical Benchmark & Stress Testing' : 'Theoretical Proof & Mathematical Bounds',
-      keyFindings: `Demonstrates 40% performance gains in ${topic} processing workloads.`,
+      keyFindings: `Demonstrates significant throughput gains in ${topic} workloads.`,
       limitations: 'High initial computational overhead under extreme scale.',
       citationCount: s.citationCount || Math.floor(Math.random() * 200 + 10),
     })),
