@@ -77,6 +77,7 @@ export interface IngestResponse {
 }
 
 export type AgentState = 'idle' | 'searching' | 'synthesizing' | 'complete';
+export type PreviewType = 'slides' | 'bibtex' | 'podcast' | 'markdown' | null;
 
 // ── Store State ──────────────────────────────────────────────────────────────
 export interface ResearchState {
@@ -97,6 +98,7 @@ export interface ResearchState {
   detailDrawerOpen: boolean;
   historyPanelOpen: boolean;
   settingsPanelOpen: boolean;
+  activePreview: PreviewType;
 
   // Sessions
   sessions: Session[];
@@ -114,6 +116,7 @@ export interface ResearchState {
   setResearching: (v: boolean) => void;
   setStreamingText: (t: string) => void;
   setResearchMode: (m: 'quick' | 'deep') => void;
+  setActivePreview: (p: PreviewType) => void;
   toggleSearchPanel: () => void;
   toggleDetailDrawer: () => void;
   toggleHistoryPanel: () => void;

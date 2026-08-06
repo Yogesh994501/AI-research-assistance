@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { nanoid } from 'nanoid';
-import type { ResearchState, GraphNode, GraphEdge, ResearchResponse, IngestResponse, Session, AgentState } from '@/types';
+import type { ResearchState, GraphNode, GraphEdge, ResearchResponse, IngestResponse, Session, AgentState, PreviewType } from '@/types';
 
 const NODE_COLORS: Record<string, string> = {
   query: '#06b6d4',    // cyan
@@ -27,6 +27,7 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
   detailDrawerOpen: false,
   historyPanelOpen: false,
   settingsPanelOpen: false,
+  activePreview: null,
 
   // Sessions
   sessions: [],
@@ -169,7 +170,6 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
     const node = state.nodes.find((n) => n.id === id);
     let cameraPos: [number, number, number] | null = null;
     if (node) {
-      // Offset camera position facing target node
       cameraPos = [node.x * 1.3, node.y + 1, node.z + 5];
     }
     set({ 
@@ -183,6 +183,7 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
   setResearching: (v) => set({ isResearching: v, agentState: v ? 'searching' : 'idle' }),
   setStreamingText: (t) => set({ streamingText: t }),
   setResearchMode: (m) => set({ researchMode: m }),
+  setActivePreview: (p: PreviewType) => set({ activePreview: p }),
   toggleSearchPanel: () => set((s) => ({ searchPanelOpen: !s.searchPanelOpen })),
   toggleDetailDrawer: () => set((s) => ({ detailDrawerOpen: !s.detailDrawerOpen })),
   toggleHistoryPanel: () => set((s) => ({ historyPanelOpen: !s.historyPanelOpen })),

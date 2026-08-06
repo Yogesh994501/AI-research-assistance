@@ -1,15 +1,12 @@
 'use client';
 
-import { useState } from 'react';
 import { Activity, CheckCircle2, Circle, Clock, Presentation, FileCode, Radio, ArrowUpRight } from 'lucide-react';
 import { useResearchStore } from '@/store/researchStore';
-import PreviewModal from './PreviewModal';
 
 export default function RightPanel() {
   const agentState = useResearchStore((s) => s.agentState);
   const isResearching = useResearchStore((s) => s.isResearching);
-
-  const [activeModal, setActiveModal] = useState<'slides' | 'bibtex' | 'podcast' | null>(null);
+  const setActivePreview = useResearchStore((s) => s.setActivePreview);
 
   const getTraceSteps = () => {
     switch (agentState) {
@@ -88,7 +85,7 @@ export default function RightPanel() {
         <div className="space-y-2.5">
           {/* Executive Slide Deck Button */}
           <button
-            onClick={() => setActiveModal('slides')}
+            onClick={() => setActivePreview('slides')}
             className="w-full p-3 rounded-xl bg-slate-950/80 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 transition-all text-left group flex items-center justify-between cursor-pointer"
           >
             <div className="flex items-center gap-3">
@@ -105,7 +102,7 @@ export default function RightPanel() {
 
           {/* BibTeX Citation Exporter Button */}
           <button
-            onClick={() => setActiveModal('bibtex')}
+            onClick={() => setActivePreview('bibtex')}
             className="w-full p-3 rounded-xl bg-slate-950/80 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 transition-all text-left group flex items-center justify-between cursor-pointer"
           >
             <div className="flex items-center gap-3">
@@ -122,7 +119,7 @@ export default function RightPanel() {
 
           {/* Audio Podcast Player Button */}
           <button
-            onClick={() => setActiveModal('podcast')}
+            onClick={() => setActivePreview('podcast')}
             className="w-full p-3 rounded-xl bg-slate-950/80 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 transition-all text-left group flex items-center justify-between cursor-pointer"
           >
             <div className="flex items-center gap-3">
@@ -138,9 +135,6 @@ export default function RightPanel() {
           </button>
         </div>
       </div>
-
-      {/* Mid Lane Full Canvas Preview Modal */}
-      {activeModal && <PreviewModal type={activeModal} onClose={() => setActiveModal(null)} />}
     </aside>
   );
 }

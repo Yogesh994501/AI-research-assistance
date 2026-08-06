@@ -17,8 +17,8 @@ export default function CenterPanel() {
   const addResearchResult = useResearchStore((s) => s.addResearchResult);
   const researchMode = useResearchStore((s) => s.researchMode);
 
-  // Export Modal State
-  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const activePreview = useResearchStore((s) => s.activePreview);
+  const setActivePreview = useResearchStore((s) => s.setActivePreview);
 
   const handleReSynthesize = async () => {
     if (!queryNode || isResearching) return;
@@ -55,7 +55,7 @@ export default function CenterPanel() {
 
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setExportModalOpen(true)}
+            onClick={() => setActivePreview('markdown')}
             className="px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-200 border border-slate-700 text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
@@ -124,8 +124,8 @@ export default function CenterPanel() {
       {/* Bottom Collapsible PDF Viewer Drawer */}
       <PdfViewerDrawer />
 
-      {/* Interactive Mid Lane Preview Modal for Export Markdown */}
-      {exportModalOpen && <PreviewModal type="markdown" onClose={() => setExportModalOpen(false)} />}
+      {/* Mid Lane Full Canvas Interactive Preview Modal */}
+      {activePreview && <PreviewModal type={activePreview} onClose={() => setActivePreview(null)} />}
     </main>
   );
 }
