@@ -7,6 +7,18 @@ import remarkGfm from 'remark-gfm';
 import { useResearchStore } from '@/store/researchStore';
 import PdfViewerDrawer from './PdfViewerDrawer';
 
+function triggerDownload(filename: string, content: string, mimeType: string) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 100);
+}
+
 export default function CenterPanel() {
   const nodes = useResearchStore((s) => s.nodes);
   const queryNode = nodes.find((n) => n.type === 'query');
@@ -39,13 +51,7 @@ export default function CenterPanel() {
 
   const handleExportMarkdown = () => {
     const text = queryNode?.summary || '# Grounded Synthesis Report\n\nNo report generated yet.';
-    const blob = new Blob([text], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'grounded_synthesis_report.md';
-    a.click();
-    URL.revokeObjectURL(url);
+    triggerDownload('grounded_synthesis_report.md', text, 'text/markdown');
   };
 
   return (
@@ -63,7 +69,7 @@ export default function CenterPanel() {
         <div className="flex items-center gap-3">
           <button
             onClick={handleExportMarkdown}
-            className="px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-200 border border-slate-700 text-xs font-medium transition-all flex items-center gap-1.5"
+            className="px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-200 border border-slate-700 text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
             Export Markdown
@@ -72,7 +78,7 @@ export default function CenterPanel() {
           <button
             onClick={handleReSynthesize}
             disabled={isResearching}
-            className="px-4 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold text-xs transition-all shadow-lg shadow-cyan-500/20 flex items-center gap-1.5 disabled:opacity-50"
+            className="px-4 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold text-xs transition-all shadow-lg shadow-cyan-500/20 flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5" />
             Re-Synthesize Report
