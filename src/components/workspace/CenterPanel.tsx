@@ -1,23 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Sparkles, Download, RefreshCw, FileText, ChevronRight, Check, BookOpen, Layers, Eye, X, Copy } from 'lucide-react';
+import { Sparkles, Download, RefreshCw, FileText, ChevronRight, Check, BookOpen, Layers } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useResearchStore } from '@/store/researchStore';
 import PdfViewerDrawer from './PdfViewerDrawer';
-
-function triggerDownload(filename: string, content: string, mimeType: string) {
-  const blob = new Blob([content], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 100);
-}
+import PreviewModal from './PreviewModal';
 
 export default function CenterPanel() {
   const nodes = useResearchStore((s) => s.nodes);
@@ -30,8 +19,6 @@ export default function CenterPanel() {
 
   // Export Modal State
   const [exportModalOpen, setExportModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<'choose' | 'preview'>('choose');
-  const [copiedMd, setCopiedMd] = useState(false);
 
   const handleReSynthesize = async () => {
     if (!queryNode || isResearching) return;
@@ -54,14 +41,6 @@ export default function CenterPanel() {
     }
   };
 
-  const reportText = queryNode?.summary || '# Grounded Synthesis Report\n\nNo report generated yet.';
-
-  const handleCopyMarkdown = () => {
-    navigator.clipboard.writeText(reportText);
-    setCopiedMd(true);
-    setTimeout(() => setCopiedMd(false), 2000);
-  };
-
   return (
     <main className="flex-1 h-full bg-slate-950 flex flex-col min-w-0 overflow-hidden relative">
       {/* Top Header Bar */}
@@ -76,7 +55,7 @@ export default function CenterPanel() {
 
         <div className="flex items-center gap-3">
           <button
-            onClick={() => { setExportModalOpen(true); setModalMode('choose'); }}
+            onClick={() => setExportModalOpen(true)}
             className="px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-200 border border-slate-700 text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
@@ -145,110 +124,8 @@ export default function CenterPanel() {
       {/* Bottom Collapsible PDF Viewer Drawer */}
       <PdfViewerDrawer />
 
-      {/* Interactive Choice / Preview Modal for Export Markdown */}
-      {exportModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-950">
-              <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-cyan-400" />
-                <h3 className="text-sm font-semibold text-slate-100">Export Grounded Synthesis Report</h3>
-              </div>
-              <button onClick={() => setExportModalOpen(false)} className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Body */}
-            <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
-              {modalMode === 'choose' ? (
-                <div className="space-y-6 text-center py-4">
-                  <div className="space-y-2">
-                    <h4 className="text-lg font-bold text-slate-100">Choose Action</h4>
-                    <p className="text-xs text-slate-400 max-w-md mx-auto">
-                      Would you like to preview the report directly in-site, or download the Markdown (.md) file to your system?
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 max-w-md mx-auto pt-2">
-                    {/* Option 1: Preview in Site */}
-                    <button
-                      onClick={() => setModalMode('preview')}
-                      className="p-5 rounded-2xl bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-cyan-500/50 transition-all text-center group flex flex-col items-center gap-3 cursor-pointer"
-                    >
-                      <div className="p-3 rounded-xl bg-cyan-500/10 text-cyan-400 group-hover:scale-110 transition-transform">
-                        <Eye className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <div className="text-xs font-bold text-slate-200 group-hover:text-cyan-300">Preview in Site</div>
-                        <div className="text-[10px] text-slate-500 mt-1">Read & copy report in site</div>
-                      </div>
-                    </button>
-
-                    {/* Option 2: Download File */}
-                    <button
-                      onClick={() => {
-                        triggerDownload('grounded_synthesis_report.md', reportText, 'text/markdown');
-                        setExportModalOpen(false);
-                      }}
-                      className="p-5 rounded-2xl bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/50 transition-all text-center group flex flex-col items-center gap-3 cursor-pointer"
-                    >
-                      <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400 group-hover:scale-110 transition-transform">
-                        <Download className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <div className="text-xs font-bold text-slate-200 group-hover:text-emerald-300">Download File</div>
-                        <div className="text-[10px] text-slate-500 mt-1">Save .md to your machine</div>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                /* Preview Modal Content */
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400 font-mono">grounded_synthesis_report.md</span>
-                    <button
-                      onClick={handleCopyMarkdown}
-                      className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-md text-xs flex items-center gap-1.5 font-medium transition-colors"
-                    >
-                      {copiedMd ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                      {copiedMd ? 'Copied!' : 'Copy Markdown'}
-                    </button>
-                  </div>
-                  <pre className="p-4 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-slate-300 overflow-x-auto custom-scrollbar leading-relaxed max-h-[350px]">
-                    {reportText}
-                  </pre>
-                </div>
-              )}
-            </div>
-
-            {/* Footer */}
-            {modalMode === 'preview' && (
-              <div className="p-4 border-t border-slate-800 bg-slate-950 flex items-center justify-between">
-                <button
-                  onClick={() => setModalMode('choose')}
-                  className="text-xs text-slate-400 hover:text-slate-200 font-medium"
-                >
-                  ← Back to choices
-                </button>
-
-                <button
-                  onClick={() => {
-                    triggerDownload('grounded_synthesis_report.md', reportText, 'text/markdown');
-                    setExportModalOpen(false);
-                  }}
-                  className="px-4 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-semibold flex items-center gap-1.5 transition-colors"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  Download File
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Interactive Mid Lane Preview Modal for Export Markdown */}
+      {exportModalOpen && <PreviewModal type="markdown" onClose={() => setExportModalOpen(false)} />}
     </main>
   );
 }
