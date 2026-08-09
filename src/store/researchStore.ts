@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { nanoid } from 'nanoid';
-import type { ResearchState, GraphNode, GraphEdge, ResearchResponse, IngestResponse, Session, AgentState, PreviewType } from '@/types';
+import type { ResearchState, GraphNode, GraphEdge, ResearchResponse, IngestResponse, Session, AgentState, PreviewType, ChatMessage } from '@/types';
 
 const NODE_COLORS: Record<string, string> = {
   query: '#06b6d4',    // cyan
@@ -28,6 +28,11 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
   historyPanelOpen: false,
   settingsPanelOpen: false,
   activePreview: null,
+
+  // Chat
+  chatMessages: [],
+  isChatOpen: false,
+  isChatStreaming: false,
 
   // Sessions
   sessions: [],
@@ -190,4 +195,18 @@ export const useResearchStore = create<ResearchState>((set, get) => ({
   toggleSettingsPanel: () => set((s) => ({ settingsPanelOpen: !s.settingsPanelOpen })),
   clearGraph: () => set({ nodes: [], edges: [], activeNodeId: null, hoveredNodeId: null, detailDrawerOpen: false, agentState: 'idle' }),
   loadSession: (session, nodes, edges) => set({ nodes, edges, currentSessionId: session.id, activeNodeId: null }),
+
+  // Chat actions
+  addChatMessage: (msg: ChatMessage) => set((s) => ({ chatMessages: [...s.chatMessages, msg] })),
+  updateLastAssistantMessage: (content: string, followUps?: string[]) => set((s) => {
+    const msgs = [...s.chatMessages];
+    const lastIdx = msgs.length - 1;
+    if (lastIdx >= 0 && msgs[lastIdx].role === 'assistant') {
+      msgs[lastIdx] = { ...msgs[lastIdx], content, followUps };
+    }
+    return { chatMessages: msgs };
+  }),
+  toggleChat: () => set((s) => ({ isChatOpen: !s.isChatOpen })),
+  setChatStreaming: (v: boolean) => set({ isChatStreaming: v }),
+  clearChat: () => set({ chatMessages: [] }),
 }));

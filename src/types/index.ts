@@ -79,6 +79,15 @@ export interface IngestResponse {
 export type AgentState = 'idle' | 'searching' | 'synthesizing' | 'complete';
 export type PreviewType = 'slides' | 'bibtex' | 'podcast' | 'markdown' | null;
 
+// ── Chat Message ─────────────────────────────────────────────────────────────
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: number;
+  followUps?: string[];
+}
+
 // ── Store State ──────────────────────────────────────────────────────────────
 export interface ResearchState {
   // Graph
@@ -99,6 +108,11 @@ export interface ResearchState {
   historyPanelOpen: boolean;
   settingsPanelOpen: boolean;
   activePreview: PreviewType;
+
+  // Chat
+  chatMessages: ChatMessage[];
+  isChatOpen: boolean;
+  isChatStreaming: boolean;
 
   // Sessions
   sessions: Session[];
@@ -123,4 +137,9 @@ export interface ResearchState {
   toggleSettingsPanel: () => void;
   clearGraph: () => void;
   loadSession: (session: Session, nodes: GraphNode[], edges: GraphEdge[]) => void;
+  addChatMessage: (msg: ChatMessage) => void;
+  updateLastAssistantMessage: (content: string, followUps?: string[]) => void;
+  toggleChat: () => void;
+  setChatStreaming: (v: boolean) => void;
+  clearChat: () => void;
 }

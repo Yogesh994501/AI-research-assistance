@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import { Sparkles, Download, RefreshCw, FileText, ChevronRight, Check, BookOpen, Layers } from 'lucide-react';
+import { Sparkles, Download, FileText, ChevronRight, BookOpen, MessageSquare, Bot } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useResearchStore } from '@/store/researchStore';
 import PdfViewerDrawer from './PdfViewerDrawer';
 import PreviewModal from './PreviewModal';
+import AiChatPanel from './AiChatPanel';
 
 export default function CenterPanel() {
   const nodes = useResearchStore((s) => s.nodes);
@@ -19,6 +19,9 @@ export default function CenterPanel() {
 
   const activePreview = useResearchStore((s) => s.activePreview);
   const setActivePreview = useResearchStore((s) => s.setActivePreview);
+
+  const isChatOpen = useResearchStore((s) => s.isChatOpen);
+  const toggleChat = useResearchStore((s) => s.toggleChat);
 
   const handleReSynthesize = async () => {
     if (!queryNode || isResearching) return;
@@ -54,6 +57,20 @@ export default function CenterPanel() {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* AI Assistant Toggle */}
+          <button
+            onClick={toggleChat}
+            className={`px-3 py-1.5 rounded-xl border text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
+              isChatOpen
+                ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-300 shadow-lg shadow-cyan-500/10'
+                : 'bg-slate-800/80 hover:bg-slate-800 text-slate-200 border-slate-700'
+            }`}
+          >
+            <Bot className="w-3.5 h-3.5" />
+            AI Assistant
+            {isChatOpen && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />}
+          </button>
+
           <button
             onClick={() => setActivePreview('markdown')}
             className="px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-200 border border-slate-700 text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer"
@@ -115,14 +132,24 @@ export default function CenterPanel() {
             </div>
             <h3 className="text-sm font-semibold text-slate-300">No Grounded Synthesis Generated</h3>
             <p className="text-xs text-slate-500 max-w-md mx-auto">
-              Type a topic in the Left Panel search bar to query OpenAlex & arXiv and generate an exhaustive 4-part scientific synthesis.
+              Type a topic in the Left Panel search bar to query OpenAlex &amp; arXiv and generate an exhaustive 4-part scientific synthesis.
             </p>
+            <button
+              onClick={toggleChat}
+              className="mt-2 px-4 py-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-semibold hover:bg-cyan-500/20 transition-all flex items-center gap-2 mx-auto cursor-pointer"
+            >
+              <Bot className="w-4 h-4" />
+              Or chat with AI Assistant
+            </button>
           </div>
         )}
       </div>
 
       {/* Bottom Collapsible PDF Viewer Drawer */}
       <PdfViewerDrawer />
+
+      {/* AI Chat Assistant Panel */}
+      <AiChatPanel />
 
       {/* Mid Lane Full Canvas Interactive Preview Modal */}
       {activePreview && <PreviewModal type={activePreview} onClose={() => setActivePreview(null)} />}
