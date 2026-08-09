@@ -1,0 +1,5 @@
+backend/
+*.py
+__pycache__/
+.env
+.env.local
