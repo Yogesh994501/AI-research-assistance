@@ -13,7 +13,7 @@ import { useResearchStore } from "@/store/researchStore";
 import { cn } from "@/lib/utils";
 
 export default function WorkspaceLayout() {
-  const { activeMobilePanel, leftPanelView, is3DExpanded } = useResearchStore();
+  const { activeMobilePanel, is3DExpanded } = useResearchStore();
 
   return (
     <div className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-[#071014] text-[#F8FAFC]">
@@ -34,15 +34,7 @@ export default function WorkspaceLayout() {
       <main className="relative z-10 hidden flex-1 gap-3.5 overflow-hidden p-3.5 lg:grid lg:grid-cols-12">
         {/* Left Panel: Literature Index (3 cols) */}
         <div className="col-span-3 h-full overflow-hidden">
-          {leftPanelView === "graph" ? (
-            <div className="glass-panel relative h-full w-full overflow-hidden">
-              <div className="absolute inset-0">
-                <ResearchCanvas />
-              </div>
-            </div>
-          ) : (
-            <LeftPanel />
-          )}
+          <LeftPanel />
         </div>
 
         {/* Center Panel: Synthesis Canvas (6 cols) */}
