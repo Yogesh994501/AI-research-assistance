@@ -1,164 +1,44 @@
 "use client";
 
-import { useMemo, useCallback, Fragment } from "react";
+import { useMemo, useCallback } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { BookOpen, Sparkles, Loader2 } from "lucide-react";
 import { useResearchStore } from "@/store/researchStore";
 import { getCitedPaper } from "@/lib/citations";
 import CitationBadge from "./CitationBadge";
 import { cn } from "@/lib/utils";
 
-/** Parse markdown text and replace [N] with interactive CitationBadge components */
-function renderWithCitations(
-  text: string,
-  onCitationClick: (index: number) => void
-): React.ReactNode[] {
-  const parts = text.split(/(\[\d+\])/g);
-  return parts.map((part, i) => {
-    const match = part.match(/^\[(\d+)\]$/);
-    if (match) {
-      const idx = parseInt(match[1], 10);
-      return <CitationBadge key={i} index={idx} onClick={onCitationClick} inline />;
-    }
-    return <Fragment key={i}>{part}</Fragment>;
-  });
+interface TextWithCitationsProps {
+  content: string;
+  onCitationClick: (index: number) => void;
 }
 
-/** Simple markdown-to-JSX renderer */
-function renderMarkdown(
-  markdown: string,
-  onCitationClick: (index: number) => void
-): React.ReactNode[] {
-  const lines = markdown.split("\n");
-  const elements: React.ReactNode[] = [];
-  let inTable = false;
-  let tableRows: string[][] = [];
-
-  const flushTable = () => {
-    if (tableRows.length > 0) {
-      const headerRow = tableRows[0];
-      const dataRows = tableRows.slice(2); /* skip separator row */
-      elements.push(
-        <div key={`table-${elements.length}`} className="my-4 overflow-x-auto">
-          <table className="w-full text-xs border-collapse">
-            <thead>
-              <tr className="border-b border-zinc-700/60">
-                {headerRow.map((cell, ci) => (
-                  <th key={ci} className="px-3 py-2 text-left text-zinc-400 font-medium">
-                    {renderWithCitations(cell.trim(), onCitationClick)}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {dataRows.map((row, ri) => (
-                <tr key={ri} className="border-b border-zinc-800/40">
-                  {row.map((cell, ci) => (
-                    <td key={ci} className="px-3 py-2 text-zinc-300">
-                      {renderWithCitations(cell.trim(), onCitationClick)}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      );
-      tableRows = [];
-    }
-    inTable = false;
-  };
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-
-    /* Table detection */
-    if (line.includes("|") && line.trim().startsWith("|")) {
-      if (!inTable) inTable = true;
-      const cells = line.split("|").filter((c) => c.trim() !== "");
-      tableRows.push(cells);
-      continue;
-    } else if (inTable) {
-      flushTable();
-    }
-
-    /* Headings */
-    if (line.startsWith("### ")) {
-      elements.push(
-        <h3 key={i} className="text-sm font-semibold text-zinc-200 mt-5 mb-2 flex items-center gap-2">
-          <span className="h-px flex-1 bg-gradient-to-r from-cyan-500/20 to-transparent max-w-[40px]" />
-          {renderWithCitations(line.slice(4), onCitationClick)}
-        </h3>
-      );
-    } else if (line.startsWith("## ")) {
-      elements.push(
-        <h2 key={i} className="text-base font-semibold text-zinc-100 mt-6 mb-3">
-          {renderWithCitations(line.slice(3), onCitationClick)}
-        </h2>
-      );
-    } else if (line.startsWith("> ")) {
-      elements.push(
-        <blockquote key={i} className="my-2 border-l-2 border-cyan-500/40 pl-3 text-xs text-zinc-400 italic">
-          {renderWithCitations(line.slice(2), onCitationClick)}
-        </blockquote>
-      );
-    } else if (line.startsWith("- ") || line.startsWith("* ")) {
-      elements.push(
-        <li key={i} className="ml-4 text-xs text-zinc-300 leading-relaxed list-disc">
-          {renderWithCitations(line.slice(2), onCitationClick)}
-        </li>
-      );
-    } else if (/^\d+\.\s/.test(line)) {
-      elements.push(
-        <li key={i} className="ml-4 text-xs text-zinc-300 leading-relaxed list-decimal">
-          {renderWithCitations(line.replace(/^\d+\.\s/, ""), onCitationClick)}
-        </li>
-      );
-    } else if (line.trim() === "") {
-      elements.push(<div key={i} className="h-2" />);
-    } else {
-      /* Apply inline bold/italic */
-      let processed = line;
-      processed = processed.replace(/\*\*(.+?)\*\*/g, "⟨b⟩$1⟨/b⟩");
-      processed = processed.replace(/\*(.+?)\*/g, "⟨i⟩$1⟨/i⟩");
-
-      const inlineParts = processed.split(/(⟨\/?[bi]⟩)/g);
-      let bold = false;
-      let italic = false;
-      const inlineElements: React.ReactNode[] = [];
-
-      for (let j = 0; j < inlineParts.length; j++) {
-        const p = inlineParts[j];
-        if (p === "⟨b⟩") { bold = true; continue; }
-        if (p === "⟨/b⟩") { bold = false; continue; }
-        if (p === "⟨i⟩") { italic = true; continue; }
-        if (p === "⟨/i⟩") { italic = false; continue; }
-        if (p) {
-          const citElements = renderWithCitations(p, onCitationClick);
-          if (bold) {
-            inlineElements.push(<strong key={j} className="text-zinc-100 font-semibold">{citElements}</strong>);
-          } else if (italic) {
-            inlineElements.push(<em key={j} className="text-zinc-400">{citElements}</em>);
-          } else {
-            inlineElements.push(<Fragment key={j}>{citElements}</Fragment>);
-          }
+function TextWithCitations({ content, onCitationClick }: TextWithCitationsProps) {
+  const parts = content.split(/(\[\d+\])/g);
+  return (
+    <>
+      {parts.map((part, i) => {
+        const match = part.match(/^\[(\d+)\]$/);
+        if (match) {
+          const idx = parseInt(match[1], 10);
+          return (
+            <CitationBadge
+              key={i}
+              index={idx}
+              onClick={onCitationClick}
+              inline
+            />
+          );
         }
-      }
-
-      elements.push(
-        <p key={i} className="text-xs text-zinc-300 leading-relaxed">
-          {inlineElements}
-        </p>
-      );
-    }
-  }
-
-  if (inTable) flushTable();
-
-  return elements;
+        return <span key={i}>{part}</span>;
+      })}
+    </>
+  );
 }
 
 export default function SynthesisReport() {
-  const { synthesisReport, papers, agentState, activeQuery, isLoading, setSelectedPaper } = useResearchStore();
+  const { synthesisReport, papers, activeQuery, isLoading, setSelectedPaper } = useResearchStore();
 
   const handleCitationClick = useCallback(
     (index: number) => {
@@ -168,23 +48,90 @@ export default function SynthesisReport() {
     [papers, setSelectedPaper]
   );
 
-  const renderedReport = useMemo(() => {
-    if (!synthesisReport) return null;
-    return renderMarkdown(synthesisReport, handleCitationClick);
-  }, [synthesisReport, handleCitationClick]);
+  const customComponents = useMemo(() => ({
+    h1: ({ children }: { children?: React.ReactNode }) => (
+      <h1 className="mt-6 mb-3 text-lg font-bold text-zinc-100">{children}</h1>
+    ),
+    h2: ({ children }: { children?: React.ReactNode }) => (
+      <h2 className="mt-5 mb-2.5 text-base font-semibold text-zinc-100">{children}</h2>
+    ),
+    h3: ({ children }: { children?: React.ReactNode }) => (
+      <h3 className="mt-4 mb-2 flex items-center gap-2 text-sm font-semibold text-cyan-300">
+        <span className="h-px w-3 bg-cyan-500/50" />
+        {children}
+      </h3>
+    ),
+    p: ({ children }: { children?: React.ReactNode }) => {
+      if (typeof children === "string") {
+        return (
+          <p className="mb-3 text-xs leading-relaxed text-zinc-300">
+            <TextWithCitations content={children} onCitationClick={handleCitationClick} />
+          </p>
+        );
+      }
+      return <p className="mb-3 text-xs leading-relaxed text-zinc-300">{children}</p>;
+    },
+    li: ({ children }: { children?: React.ReactNode }) => {
+      if (typeof children === "string") {
+        return (
+          <li className="mb-1.5 text-xs leading-relaxed text-zinc-300">
+            <TextWithCitations content={children} onCitationClick={handleCitationClick} />
+          </li>
+        );
+      }
+      return <li className="mb-1.5 text-xs leading-relaxed text-zinc-300">{children}</li>;
+    },
+    ul: ({ children }: { children?: React.ReactNode }) => (
+      <ul className="mb-3 ml-4 list-disc space-y-1 text-zinc-300">{children}</ul>
+    ),
+    ol: ({ children }: { children?: React.ReactNode }) => (
+      <ol className="mb-3 ml-4 list-decimal space-y-1 text-zinc-300">{children}</ol>
+    ),
+    blockquote: ({ children }: { children?: React.ReactNode }) => (
+      <blockquote className="my-3 rounded-r-lg border-l-2 border-cyan-500/60 bg-cyan-950/20 px-3 py-2 text-xs italic text-zinc-300">
+        {children}
+      </blockquote>
+    ),
+    table: ({ children }: { children?: React.ReactNode }) => (
+      <div className="my-4 overflow-x-auto rounded-lg border border-zinc-800/80 bg-zinc-950/60">
+        <table className="w-full text-left text-xs border-collapse">{children}</table>
+      </div>
+    ),
+    thead: ({ children }: { children?: React.ReactNode }) => (
+      <thead className="border-b border-zinc-700/60 bg-zinc-900/60 font-semibold text-zinc-300">{children}</thead>
+    ),
+    tbody: ({ children }: { children?: React.ReactNode }) => (
+      <tbody className="divide-y divide-zinc-800/40 text-zinc-300">{children}</tbody>
+    ),
+    th: ({ children }: { children?: React.ReactNode }) => (
+      <th className="px-3 py-2 font-medium text-zinc-300">{children}</th>
+    ),
+    td: ({ children }: { children?: React.ReactNode }) => (
+      <td className="px-3 py-2 text-zinc-300">{children}</td>
+    ),
+    strong: ({ children }: { children?: React.ReactNode }) => (
+      <strong className="font-semibold text-zinc-100">{children}</strong>
+    ),
+    em: ({ children }: { children?: React.ReactNode }) => (
+      <em className="italic text-zinc-400">{children}</em>
+    ),
+    code: ({ children }: { children?: React.ReactNode }) => (
+      <code className="rounded bg-zinc-800/80 px-1.5 py-0.5 font-mono text-[11px] text-cyan-300">{children}</code>
+    ),
+  }), [handleCitationClick]);
 
-  /* Loading state */
+  /* Loading State */
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-4 animate-fade-in">
         <Loader2 className="h-8 w-8 text-cyan-400 animate-spin" />
-        <p className="text-sm text-zinc-400">Synthesizing research…</p>
-        <p className="text-xs text-zinc-600">{activeQuery}</p>
+        <p className="text-sm font-medium text-zinc-300">Synthesizing grounded research…</p>
+        <p className="text-xs text-zinc-500">{activeQuery}</p>
       </div>
     );
   }
 
-  /* Empty state */
+  /* Empty State */
   if (!synthesisReport) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-4 text-center px-6">
@@ -196,7 +143,7 @@ export default function SynthesisReport() {
           <h2 className="text-lg font-semibold text-zinc-300">Ask Nexus3D a research question</h2>
           <p className="text-xs text-zinc-500 mt-2 max-w-sm">
             Multi-engine scholarly search across OpenAlex, arXiv & Semantic Scholar.
-            All findings are grounded with inline citations.
+            All findings are grounded with verified inline citations.
           </p>
         </div>
       </div>
@@ -204,8 +151,8 @@ export default function SynthesisReport() {
   }
 
   return (
-    <div className={cn("px-4 py-4 space-y-1 animate-fade-in", "max-w-none prose-sm")}>
-      {/* Query badge */}
+    <div className={cn("px-4 py-4 space-y-1 animate-fade-in")}>
+      {/* Research Question Header Badge */}
       {activeQuery && (
         <div className="flex items-center gap-2 mb-4 pb-3 border-b border-zinc-800/50">
           <BookOpen className="h-3.5 w-3.5 text-cyan-400" />
@@ -213,7 +160,11 @@ export default function SynthesisReport() {
           <span className="text-xs text-zinc-200 font-medium">{activeQuery}</span>
         </div>
       )}
-      {renderedReport}
+
+      {/* Markdown Body */}
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={customComponents}>
+        {synthesisReport}
+      </ReactMarkdown>
     </div>
   );
 }
