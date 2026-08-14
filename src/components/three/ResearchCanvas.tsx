@@ -1,58 +1,59 @@
-'use client';
+"use client";
 
-import { useRef, useEffect } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
-import { EffectComposer, Bloom, ToneMapping } from '@react-three/postprocessing';
-import * as THREE from 'three';
-import ParticleField from './ParticleField';
-import KnowledgeGraph from './KnowledgeGraph';
-import AgentStateOrb from './AgentStateOrb';
-import { useResearchStore } from '@/store/researchStore';
+import { Suspense, useState, useEffect } from "react";
+import { Canvas } from "@react-three/fiber";
+import ParticleField from "./ParticleField";
+import AgentStateOrb from "./AgentStateOrb";
+import CitationConstellation from "./CitationConstellation";
+import CameraController from "./CameraController";
 
-function CameraController() {
-  const { camera } = useThree();
-  const targetPos = useResearchStore((s) => s.targetCameraPosition);
-  const activeNodeId = useResearchStore((s) => s.activeNodeId);
+function Scene() {
+  return (
+    <>
+      <ambientLight intensity={0.5} />
+      <pointLight position={[10, 10, 10]} intensity={1.2} color="#38bdf8" />
+      <pointLight position={[-10, -10, -10]} intensity={0.8} color="#a855f7" />
 
-  useFrame((_, delta) => {
-    if (targetPos && activeNodeId) {
-      const targetVec = new THREE.Vector3(...targetPos);
-      camera.position.lerp(targetVec, delta * 3);
-    }
-  });
+      {/* Ambient Particle Field */}
+      <ParticleField count={200} />
 
-  return null;
+      {/* Central Agent Orb */}
+      <AgentStateOrb />
+
+      {/* 3D Citation Constellation of retrieved papers */}
+      <CitationConstellation />
+
+      {/* Smooth Camera Controller */}
+      <CameraController />
+    </>
+  );
 }
 
 export default function ResearchCanvas() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-zinc-950/80">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-cyan-500 border-t-transparent" />
+      </div>
+    );
+  }
+
   return (
-    <div className="absolute inset-0 z-0 bg-[#030712]">
-      <Canvas shadows dpr={[1, 2]}>
-        <PerspectiveCamera makeDefault position={[0, 0, 16]} fov={50} />
-        <CameraController />
-        
-        <OrbitControls 
-          enablePan={true}
-          enableZoom={true}
-          enableRotate={true}
-          autoRotate={false}
-          maxDistance={45}
-          minDistance={2}
-        />
-        
-        <ambientLight intensity={0.3} />
-        <pointLight position={[12, 12, 12]} intensity={1.2} color="#ffffff" />
-        <pointLight position={[-12, -12, -12]} intensity={0.6} color="#a855f7" />
-
-        <AgentStateOrb />
-        <ParticleField />
-        <KnowledgeGraph />
-
-        <EffectComposer enableNormalPass={false}>
-          <Bloom luminanceThreshold={0.2} mipmapBlur intensity={1.4} />
-          <ToneMapping />
-        </EffectComposer>
+    <div className="relative h-full w-full overflow-hidden">
+      <Canvas
+        camera={{ position: [0, 0, 10], fov: 60 }}
+        gl={{ antialias: true, alpha: true }}
+        dpr={[1, 2]}
+      >
+        <Suspense fallback={null}>
+          <Scene />
+        </Suspense>
       </Canvas>
     </div>
   );

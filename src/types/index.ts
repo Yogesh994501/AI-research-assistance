@@ -1,145 +1,76 @@
-// ── Graph Node Types ─────────────────────────────────────────────────────────
-export type NodeType = 'query' | 'concept' | 'source' | 'document';
-
-export interface GraphNode {
-  id: string;
-  label: string;
-  type: NodeType;
-  x: number;
-  y: number;
-  z: number;
-  // Velocity for force simulation
-  vx?: number;
-  vy?: number;
-  vz?: number;
-  // Metadata
-  summary?: string;
-  url?: string;
-  relevanceScore?: number;
-  parentId?: string;
-  color?: string;
-  citationCount?: number;
-  doi?: string;
-  methodology?: string;
-  limitations?: string;
-}
-
-export interface GraphEdge {
-  id: string;
-  source: string;
-  target: string;
-  strength: number; // 0-1
-}
-
-// ── Research Session ─────────────────────────────────────────────────────────
-export interface Session {
-  id: string;
-  query: string;
-  timestamp: number;
-  nodeCount: number;
-}
-
-// ── API Response Types ───────────────────────────────────────────────────────
-export interface PaperComparison {
-  title: string;
-  methodology: string;
-  keyFindings: string;
-  limitations: string;
-  citationCount?: number;
-  doi?: string;
-}
-
-export interface SearchSource {
+/* ─── Paper ─── */
+export interface Paper {
   id: string;
   title: string;
-  url: string;
-  snippet: string;
-  domain: string;
-  publishedAt?: string;
+  doi: string | null;
+  citationCount: number;
+  abstract: string | null;
+  openAccessPdf: string | null;
+  authors: string[];
+  year: number | null;
+  source: "openalex" | "arxiv" | "semantic_scholar";
+  url: string | null;
   relevanceScore: number;
-  citationCount?: number;
-  doi?: string;
 }
 
-export interface ResearchResponse {
-  answer: string;
-  sources: SearchSource[];
-  concepts: string[];
-  followUps: string[];
-  paperComparisons?: PaperComparison[];
-}
+/* ─── Agent State ─── */
+export type AgentState = "idle" | "searching" | "synthesizing" | "complete" | "error";
 
-export interface IngestResponse {
-  documentId: string;
-  title: string;
-  chunks: number;
-  concepts: string[];
-}
+/* ─── Workflow ─── */
+export type StepStatus = "pending" | "active" | "complete" | "error";
 
-export type AgentState = 'idle' | 'searching' | 'synthesizing' | 'complete';
-export type PreviewType = 'slides' | 'bibtex' | 'podcast' | 'markdown' | null;
-
-// ── Chat Message ─────────────────────────────────────────────────────────────
-export interface ChatMessage {
+export interface WorkflowStep {
   id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: number;
-  followUps?: string[];
+  title: string;
+  description: string;
+  status: StepStatus;
+  timestamp: number | null;
 }
 
-// ── Store State ──────────────────────────────────────────────────────────────
-export interface ResearchState {
-  // Graph
-  nodes: GraphNode[];
-  edges: GraphEdge[];
-  activeNodeId: string | null;
-  hoveredNodeId: string | null;
-  targetCameraPosition: [number, number, number] | null;
+/* ─── Citation Node (3D) ─── */
+export interface CitationNode {
+  paperId: string;
+  title: string;
+  citationCount: number;
+  position: [number, number, number];
+  connectedNodes: string[];
+  relevance: number;
+}
 
-  // Agent State
+/* ─── Mobile Panel ─── */
+export type MobilePanel = "sources" | "studio" | "agent";
+
+/* ─── Left Panel View ─── */
+export type LeftPanelView = "papers" | "graph";
+
+/* ─── Research Store State ─── */
+export interface ResearchStoreState {
+  /* state */
   agentState: AgentState;
+  activeQuery: string;
+  papers: Paper[];
+  synthesisReport: string;
+  selectedPaper: Paper | null;
+  workflowSteps: WorkflowStep[];
+  activeMobilePanel: MobilePanel;
+  leftPanelView: LeftPanelView;
+  is3DExpanded: boolean;
+  isLoading: boolean;
+  error: string | null;
 
-  // UI State
-  isResearching: boolean;
-  streamingText: string;
-  searchPanelOpen: boolean;
-  detailDrawerOpen: boolean;
-  historyPanelOpen: boolean;
-  settingsPanelOpen: boolean;
-  activePreview: PreviewType;
-
-  // Chat
-  chatMessages: ChatMessage[];
-  isChatOpen: boolean;
-  isChatStreaming: boolean;
-
-  // Sessions
-  sessions: Session[];
-  currentSessionId: string | null;
-
-  // Settings
-  researchMode: 'quick' | 'deep';
-
-  // Actions
-  addResearchResult: (query: string, response: ResearchResponse) => void;
-  addDocument: (response: IngestResponse) => void;
-  selectNode: (id: string | null) => void;
-  hoverNode: (id: string | null) => void;
-  setAgentState: (s: AgentState) => void;
-  setResearching: (v: boolean) => void;
-  setStreamingText: (t: string) => void;
-  setResearchMode: (m: 'quick' | 'deep') => void;
-  setActivePreview: (p: PreviewType) => void;
-  toggleSearchPanel: () => void;
-  toggleDetailDrawer: () => void;
-  toggleHistoryPanel: () => void;
-  toggleSettingsPanel: () => void;
-  clearGraph: () => void;
-  loadSession: (session: Session, nodes: GraphNode[], edges: GraphEdge[]) => void;
-  addChatMessage: (msg: ChatMessage) => void;
-  updateLastAssistantMessage: (content: string, followUps?: string[]) => void;
-  toggleChat: () => void;
-  setChatStreaming: (v: boolean) => void;
-  clearChat: () => void;
+  /* actions */
+  setAgentState: (state: AgentState) => void;
+  setActiveQuery: (query: string) => void;
+  setPapers: (papers: Paper[]) => void;
+  setSynthesisReport: (report: string) => void;
+  setSelectedPaper: (paper: Paper | null) => void;
+  setWorkflowSteps: (steps: WorkflowStep[]) => void;
+  updateWorkflowStep: (id: string, status: StepStatus) => void;
+  setActiveMobilePanel: (panel: MobilePanel) => void;
+  setLeftPanelView: (view: LeftPanelView) => void;
+  set3DExpanded: (expanded: boolean) => void;
+  setIsLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  resetResearch: () => void;
+  executeSearch: (query: string) => Promise<void>;
 }

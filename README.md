@@ -1,133 +1,108 @@
-# 🌌 Nexus3D — 3D AI Academic Research Studio
+# Nexus3D — 3D AI Academic Research Studio
 
-> **Production-Ready 3D AI Research Workspace** powered by Next.js 14+ (App Router), React Three Fiber (R3F), Three.js, Tailwind CSS, Google Gemini 2.5 Flash, OpenAlex (250M+ Papers), Semantic Scholar, and arXiv.
-
----
-
-## 🌟 Overview
-
-**Nexus3D** transforms flat 2D search into an interactive 3D spatial research studio. It autonomously queries scholarly literature databases, calculates hybrid vector/BM25 rankings, re-ranks context via local cross-encoders, and renders grounded 4-part scientific syntheses alongside interactive 3D citation constellations.
+Nexus3D is a production-quality, spatial AI academic research workstation that searches multiple scholarly repositories simultaneously, deduplicates and ranks literature, synthesizes grounded research reports with strict inline citation mapping via Google Gemini, and visualizes paper networks in an interactive 3D citation constellation.
 
 ---
 
-## ✨ Key Features
+## Architecture Overview
 
-### 📚 1. Multi-Engine Scholarly Discovery
-- **OpenAlex Integration**: Direct access to 250M+ paper index (no API key required). Extracts citation counts, DOIs, abstracts, and open-access PDF links.
-- **Semantic Scholar & arXiv Integration**: Queries live arXiv preprints and Semantic Scholar paper graphs in parallel.
-- **Serper Google Scholar**: Optional fallback endpoint for broad search indexing.
-
-### ⚡ 2. Hybrid Retrieval + FlashRank Re-Ranking
-- **BM25 Sparse Keyword Search**: TF-IDF exact keyword matching for chemical formulas, model names, and clinical trial codes.
-- **Dense Vector Embeddings**: Cosine similarity vector search.
-- **FlashRank Re-Ranking**: Cross-encoder stage re-evaluating top candidate chunks against query token overlap.
-
-### 🌐 3. Interactive 3D Spatial Canvas
-- **3D Citation Constellation**: Papers rendered as floating 3D spheres scaled by real citation count (e.g. 5,472 citations).
-- **Smooth 3D Camera Lerp**: Clicking a 3D paper node smoothly zooms the camera straight to that targeted paper in 3D space.
-- **Dynamic 3D Agent State Orb**: Central 3D wireframe core sphere that visually reacts to agent state transitions (*Idle*, *Searching*, *Synthesizing*, *Complete*).
-- **GPU Particle Field**: Ambient floating starfield drift with Bloom and ToneMapping post-processing.
-
-### 🎨 4. Modern Glassmorphism 3-Panel UI
-- **Left Panel (Width: 320px)**: Literature Index with `Paper List` vs `3D Graph` tabs, match scores (`99% Match`), and source context checkboxes.
-- **Center Panel (Flex-1)**: Grounded Synthesis Report canvas with key methodological callouts, interactive citation badges `[1]`, comparative tables, and collapsible split-screen `Source Inspector` PDF drawer.
-- **Right Panel (Width: 320px)**: Agent Workflow Inspector tracking LangGraph pipeline execution, plus Studio Generators (*Executive Slide Deck*, *Export BibTeX*, *Audio Podcast*).
-
-### 🎓 5. World-Class Scientific Synthesizer Prompt
-- Strict inline citation mapping (`[1]`, `[2]`).
-- Strict anti-hallucination rules (*"No empirical evidence found in provided corpus"*).
-- Automatic extraction of statistical parameters, sample sizes, datasets, and performance metrics into Markdown comparison tables.
-
----
-
-## 🛠️ Tech Stack
-
-| Layer | Technology |
-|---|---|
-| **Framework** | Next.js 16 (App Router), TypeScript, React 19 |
-| **Styling** | Tailwind CSS v4, Glassmorphism backdrop-blur, Lucide Icons |
-| **3D Engine** | Three.js, React Three Fiber (`@react-three/fiber`), Drei (`@react-three/drei`) |
-| **Post-Processing** | `@react-three/postprocessing` (Bloom, ToneMapping) |
-| **AI LLM Engine** | Google Gemini 2.5 Flash (`@google/genai`) |
-| **Scholarly APIs** | OpenAlex API, Semantic Scholar API, arXiv XML API, Serper API |
-| **Vector Store** | In-memory Hybrid Search Engine (BM25 + Dense Vectors + FlashRank) |
-| **State Management** | Zustand |
-
----
-
-## 🚀 Quickstart Guide
-
-### Prerequisites
-- Node.js `v18.0.0` or higher
-- npm or pnpm
-
-### Installation
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/Yogesh994501/AI-research-assistance.git
-cd AI-research-assistance
-
-# 2. Install dependencies
-npm install
-
-# 3. Configure Environment Variables
-# Create a .env.local file in the project root:
-GEMINI_API_KEY=your_gemini_api_key_here
-LLM_MODEL=gemini-2.5-flash
-SERPER_API_KEY=your_serper_key_optional
-
-# 4. Start Development Server
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
----
-
-## 📁 Repository Structure
-
-```
-nexus-3d-research/
+```text
+nexus3d/
 ├── src/
 │   ├── app/
-│   │   ├── api/
-│   │   │   ├── research/route.ts      # Research orchestration route
-│   │   │   └── ingest/route.ts        # PDF parsing & RAG ingestion
-│   │   ├── globals.css                # Dark theme & glassmorphism
-│   │   ├── layout.tsx                 # Root layout & typography
-│   │   └── page.tsx                   # 3-Panel Workspace page
+│   │   ├── api/research/route.ts      # Multi-engine search + Gemini synthesis orchestrator
+│   │   ├── globals.css                # Tailwind base + dark glassmorphic design system
+│   │   ├── layout.tsx                 # Root HTML shell & Inter font setup
+│   │   └── page.tsx                   # Main entry mounting WorkspaceLayout
 │   ├── components/
+│   │   ├── layout/
+│   │   │   ├── Header.tsx             # Global search & agent status indicator
+│   │   │   ├── WorkspaceLayout.tsx    # Desktop 3-panel & mobile responsive grid
+│   │   │   └── MobileNavigation.tsx   # Fixed bottom tab navigation (Sources|Studio|Agent)
+│   │   ├── panels/
+│   │   │   ├── LeftPanel.tsx          # Literature Index & Paper vs. 3D toggle
+│   │   │   ├── CenterPanel.tsx        # Grounded Synthesis Canvas
+│   │   │   └── RightPanel.tsx         # Agent State Orb & Workflow Inspector
+│   │   ├── research/
+│   │   │   ├── SearchBar.tsx          # Query input with keyboard submit
+│   │   │   ├── PaperCard.tsx          # Scholarly paper card with metadata chips
+│   │   │   ├── PaperList.tsx          # Paper list with skeleton loaders & empty states
+│   │   │   ├── CitationBadge.tsx      # Interactive inline citation [N] chips
+│   │   │   ├── SynthesisReport.tsx    # Markdown renderer with interactive citation triggers
+│   │   │   └── SourceInspector.tsx    # Metadata, abstract & PDF drawer
+│   │   ├── agent/
+│   │   │   ├── AgentStateOrb.tsx      # 2D state-reactive animated orb
+│   │   │   ├── AgentWorkflow.tsx      # Step-by-step pipeline stepper
+│   │   │   └── WorkflowStep.tsx       # Timeline step indicator
 │   │   ├── three/
-│   │   │   ├── ResearchCanvas.tsx     # Main R3F Canvas & Camera Controller
-│   │   │   ├── KnowledgeGraph.tsx     # 3D Node & Edge Manager
-│   │   │   ├── GraphNode3D.tsx        # Interactive 3D Node & Tooltip
-│   │   │   ├── ConnectionLine.tsx     # Pulsing 3D Edge Lines
-│   │   │   ├── AgentStateOrb.tsx      # Dynamic 3D Agent State Core
-│   │   │   └── ParticleField.tsx      # Starfield GPU Particles
-│   │   ├── workspace/
-│   │   │   ├── LeftPanel.tsx          # Literature Index & Sources
-│   │   │   ├── CenterPanel.tsx        # Synthesis Canvas & Header
-│   │   │   ├── RightPanel.tsx         # Agent Inspector & Generators
-│   │   │   └── PdfViewerDrawer.tsx    # Split-screen PDF Source Inspector
-│   │   └── hud/
-│   │       ├── DetailDrawer.tsx       # Metadata Drawer
-│   │       ├── HistoryPanel.tsx       # Research History Sidebar
-│   │       └── SettingsPanel.tsx      # Preferences Panel
+│   │   │   ├── ResearchCanvas.tsx     # SSR-safe R3F Three.js canvas wrapper
+│   │   │   ├── ParticleField.tsx      # Ambient depth floating particle system
+│   │   │   ├── AgentStateOrb.tsx      # Reactive 3D mesh distorted orb
+│   │   │   ├── CitationConstellation.tsx # 3D spherical Fibonacci paper constellation
+│   │   │   ├── CitationNode.tsx       # Individual 3D paper node with hover/click
+│   │   │   └── CameraController.tsx   # Smooth Three.js camera lerping & OrbitControls
+│   │   └── mobile/
+│   │       ├── BottomSheet.tsx        # Touch-friendly bottom sheet drawer
+│   │       ├── MobileSources.tsx      # Vertical card list + Fullscreen 3D
+│   │       ├── MobileStudio.tsx       # Studio synthesis with BottomSheet inspector
+│   │       └── MobileAgent.tsx        # Mobile agent workflow & generator cards
 │   ├── lib/
-│   │   ├── gemini.ts                  # Gemini API & Academic Prompt
-│   │   ├── search.ts                  # Multi-engine OpenAlex/arXiv/S2 search
-│   │   └── vectorStore.ts             # BM25 + Vector Hybrid Reranker
+│   │   ├── openalex.ts                # OpenAlex REST search & inverted-index abstract decoder
+│   │   ├── arxiv.ts                   # arXiv XML API parser (fast-xml-parser)
+│   │   ├── semanticScholar.ts         # Semantic Scholar Graph API client
+│   │   ├── search.ts                  # Parallel multi-engine pipeline & relevance scoring
+│   │   ├── gemini.ts                  # Grounded synthesis engine (@google/genai)
+│   │   ├── citations.ts               # Citation parser, validator & lookup map
+│   │   └── utils.ts                   # Tailwind merge & string formatting helpers
 │   ├── store/
-│   │   └── researchStore.ts           # Zustand global state
+│   │   └── researchStore.ts           # Central Zustand store & search execution
 │   └── types/
-│       └── index.ts                   # TypeScript interfaces
-├── package.json
-└── README.md
+│       └── index.ts                   # Strict TypeScript domain interfaces
+├── tailwind.config.ts                 # Glassmorphic dark design system configuration
+├── tsconfig.json                      # Strict TypeScript compiler options
+└── package.json
 ```
 
 ---
 
-## 📜 License
+## Key Features
 
-MIT License © 2026 Yogesh. Built for high-impact AI research automation.
+1. **Multi-Engine Academic Search**: Queries **OpenAlex**, **arXiv**, and **Semantic Scholar** concurrently using `Promise.allSettled()`.
+2. **DOI & Normalized Title Deduplication**: Intelligent merging across academic sources preserving max metadata and citations.
+3. **Transparent Relevance Scoring**: Heuristic ranking based on keyword matches, recency, citation volume, and abstract availability.
+4. **Grounded Gemini 2.5 Flash Synthesis**: Strict system instruction enforcing verifiable facts and inline citations (`[1]`, `[2]`).
+5. **Citation Integrity Verification**: Automated validation ensuring every citation in the report maps to an existing source in the literature index.
+6. **3D Citation Constellation**: React Three Fiber 3D space with ambient particles, reactive agent orb, and interactive paper nodes arranged in a spherical Fibonacci lattice.
+7. **Mobile-First Responsive Design**: Desktop 3-panel workspace dynamically adapts to a clean 3-tab mobile experience (`Sources | Studio | Agent`) with touch bottom sheets.
+
+---
+
+## Installation & Setup
+
+### 1. Install Dependencies
+```bash
+npm install
+```
+
+### 2. Configure Environment Variables
+Copy `.env.example` to `.env.local` and add your API keys:
+```bash
+cp .env.example .env.local
+```
+
+```env
+GEMINI_API_KEY=your_gemini_api_key
+LLM_MODEL=gemini-2.5-flash
+```
+
+### 3. Run Development Server
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### 4. Build for Production
+```bash
+npm run build
+npm run start
+```

@@ -1,49 +1,62 @@
-'use client';
+"use client";
 
-import { useRef, useMemo } from 'react';
-import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { useRef, useMemo } from "react";
+import { useFrame } from "@react-three/fiber";
+import * as THREE from "three";
 
-const PARTICLE_COUNT = 800;
+interface ParticleFieldProps {
+  count?: number;
+}
 
-export default function ParticleField() {
-  const meshRef = useRef<THREE.Points>(null!);
+export default function ParticleField({ count = 250 }: ParticleFieldProps) {
+  const pointsRef = useRef<THREE.Points>(null);
 
-  const [positions, sizes] = useMemo(() => {
-    const pos = new Float32Array(PARTICLE_COUNT * 3);
-    const sz = new Float32Array(PARTICLE_COUNT);
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      pos[i * 3] = (Math.random() - 0.5) * 60;
+  const [positions, colors] = useMemo(() => {
+    const pos = new Float32Array(count * 3);
+    const col = new Float32Array(count * 3);
+
+    const color1 = new THREE.Color("#06b6d4"); // cyan
+    const color2 = new THREE.Color("#8b5cf6"); // violet
+    const color3 = new THREE.Color("#3b82f6"); // blue
+
+    for (let i = 0; i < count; i++) {
+      // Spread across sphere/box
+      pos[i * 3] = (Math.random() - 0.5) * 40;
       pos[i * 3 + 1] = (Math.random() - 0.5) * 40;
-      pos[i * 3 + 2] = (Math.random() - 0.5) * 60;
-      sz[i] = Math.random() * 2 + 0.5;
-    }
-    return [pos, sz];
-  }, []);
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 30;
 
-  useFrame((_, delta) => {
-    if (!meshRef.current) return;
-    meshRef.current.rotation.y += delta * 0.01;
-    meshRef.current.rotation.x += delta * 0.005;
+      const mixedColor = Math.random() > 0.6 ? color1 : Math.random() > 0.3 ? color2 : color3;
+      col[i * 3] = mixedColor.r;
+      col[i * 3 + 1] = mixedColor.g;
+      col[i * 3 + 2] = mixedColor.b;
+    }
+    return [pos, col];
+  }, [count]);
+
+  useFrame((state) => {
+    if (!pointsRef.current) return;
+    const t = state.clock.getElapsedTime() * 0.05;
+    pointsRef.current.rotation.y = t * 0.2;
+    pointsRef.current.rotation.x = Math.sin(t * 0.3) * 0.1;
   });
 
   return (
-    <points ref={meshRef}>
+    <points ref={pointsRef}>
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
           args={[positions, 3]}
         />
         <bufferAttribute
-          attach="attributes-size"
-          args={[sizes, 1]}
+          attach="attributes-color"
+          args={[colors, 3]}
         />
       </bufferGeometry>
       <pointsMaterial
-        size={0.08}
-        color="#6366f1"
+        size={0.12}
+        vertexColors
         transparent
-        opacity={0.4}
+        opacity={0.6}
         sizeAttenuation
         blending={THREE.AdditiveBlending}
         depthWrite={false}

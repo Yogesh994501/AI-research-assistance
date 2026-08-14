@@ -1,212 +1,116 @@
-import { create } from 'zustand';
-import { nanoid } from 'nanoid';
-import type { ResearchState, GraphNode, GraphEdge, ResearchResponse, IngestResponse, Session, AgentState, PreviewType, ChatMessage } from '@/types';
+import { create } from "zustand";
+import type { ResearchStoreState, WorkflowStep } from "@/types";
 
-const NODE_COLORS: Record<string, string> = {
-  query: '#06b6d4',    // cyan
-  concept: '#a855f7',  // violet
-  source: '#22c55e',   // green
-  document: '#eab308', // yellow
-};
+const DEFAULT_WORKFLOW: WorkflowStep[] = [
+  { id: "query", title: "Query Received", description: "Parsing research question", status: "pending", timestamp: null },
+  { id: "search", title: "Searching Literature", description: "Querying OpenAlex, arXiv & Semantic Scholar", status: "pending", timestamp: null },
+  { id: "rank", title: "Ranking Sources", description: "Scoring & deduplicating papers", status: "pending", timestamp: null },
+  { id: "context", title: "Building Evidence", description: "Extracting key passages for context", status: "pending", timestamp: null },
+  { id: "synthesize", title: "Synthesizing", description: "Gemini grounded synthesis", status: "pending", timestamp: null },
+  { id: "validate", title: "Validating Citations", description: "Verifying citation integrity", status: "pending", timestamp: null },
+];
 
-export const useResearchStore = create<ResearchState>((set, get) => ({
-  // Graph
-  nodes: [],
-  edges: [],
-  activeNodeId: null,
-  hoveredNodeId: null,
-  targetCameraPosition: null,
+export const useResearchStore = create<ResearchStoreState>((set, get) => ({
+  /* ── initial state ── */
+  agentState: "idle",
+  activeQuery: "",
+  papers: [],
+  synthesisReport: "",
+  selectedPaper: null,
+  workflowSteps: DEFAULT_WORKFLOW.map((s) => ({ ...s })),
+  activeMobilePanel: "studio",
+  leftPanelView: "papers",
+  is3DExpanded: false,
+  isLoading: false,
+  error: null,
 
-  // Agent State
-  agentState: 'idle',
+  /* ── actions ── */
+  setAgentState: (agentState) => set({ agentState }),
+  setActiveQuery: (activeQuery) => set({ activeQuery }),
+  setPapers: (papers) => set({ papers }),
+  setSynthesisReport: (synthesisReport) => set({ synthesisReport }),
+  setSelectedPaper: (selectedPaper) => set({ selectedPaper }),
+  setWorkflowSteps: (workflowSteps) => set({ workflowSteps }),
 
-  // UI
-  isResearching: false,
-  streamingText: '',
-  searchPanelOpen: true,
-  detailDrawerOpen: false,
-  historyPanelOpen: false,
-  settingsPanelOpen: false,
-  activePreview: null,
+  updateWorkflowStep: (id, status) =>
+    set((state) => ({
+      workflowSteps: state.workflowSteps.map((s) =>
+        s.id === id ? { ...s, status, timestamp: Date.now() } : s
+      ),
+    })),
 
-  // Chat
-  chatMessages: [],
-  isChatOpen: false,
-  isChatStreaming: false,
+  setActiveMobilePanel: (activeMobilePanel) => set({ activeMobilePanel }),
+  setLeftPanelView: (leftPanelView) => set({ leftPanelView }),
+  set3DExpanded: (is3DExpanded) => set({ is3DExpanded }),
+  setIsLoading: (isLoading) => set({ isLoading }),
+  setError: (error) => set({ error }),
 
-  // Sessions
-  sessions: [],
-  currentSessionId: null,
+  resetResearch: () =>
+    set({
+      agentState: "idle",
+      activeQuery: "",
+      papers: [],
+      synthesisReport: "",
+      selectedPaper: null,
+      workflowSteps: DEFAULT_WORKFLOW.map((s) => ({ ...s })),
+      is3DExpanded: false,
+      isLoading: false,
+      error: null,
+    }),
 
-  // Settings
-  researchMode: 'quick',
-
-  // ── Actions ──────────────────────────────────────────────────────────────
-
-  addResearchResult: (query: string, response: ResearchResponse) => {
-    const state = get();
-    const sessionId = nanoid();
-    const queryNodeId = nanoid();
-
-    // Central query node
-    const queryNode: GraphNode = {
-      id: queryNodeId,
-      label: query.length > 40 ? query.slice(0, 40) + '…' : query,
-      type: 'query',
-      x: 0, y: 0, z: 0,
-      summary: response.answer,
-      color: NODE_COLORS.query,
-    };
-
-    const newNodes: GraphNode[] = [queryNode];
-    const newEdges: GraphEdge[] = [];
-
-    // Source nodes — arranged in outer orbital shell
-    response.sources.forEach((src, i) => {
-      const angle = (i / Math.max(response.sources.length, 1)) * Math.PI * 2;
-      const radius = 5 + Math.random() * 2;
-      const nodeId = nanoid();
-      newNodes.push({
-        id: nodeId,
-        label: src.title.length > 35 ? src.title.slice(0, 35) + '…' : src.title,
-        type: 'source',
-        x: Math.cos(angle) * radius,
-        y: (Math.random() - 0.5) * 3,
-        z: Math.sin(angle) * radius,
-        summary: src.snippet,
-        url: src.url,
-        relevanceScore: src.relevanceScore,
-        citationCount: src.citationCount,
-        doi: src.doi,
-        parentId: queryNodeId,
-        color: NODE_COLORS.source,
-      });
-      newEdges.push({
-        id: nanoid(),
-        source: queryNodeId,
-        target: nodeId,
-        strength: src.relevanceScore,
-      });
-    });
-
-    // Concept nodes — arranged in inner ring
-    response.concepts.forEach((concept, i) => {
-      const angle = (i / Math.max(response.concepts.length, 1)) * Math.PI * 2 + Math.PI / 6;
-      const radius = 3 + Math.random();
-      const nodeId = nanoid();
-      newNodes.push({
-        id: nodeId,
-        label: concept,
-        type: 'concept',
-        x: Math.cos(angle) * radius,
-        y: 1.5 + (Math.random() - 0.5) * 2,
-        z: Math.sin(angle) * radius,
-        parentId: queryNodeId,
-        color: NODE_COLORS.concept,
-      });
-      newEdges.push({
-        id: nanoid(),
-        source: queryNodeId,
-        target: nodeId,
-        strength: 0.7,
-      });
-    });
-
-    const session: Session = {
-      id: sessionId,
-      query,
-      timestamp: Date.now(),
-      nodeCount: newNodes.length,
-    };
+  executeSearch: async (query: string) => {
+    const store = get();
+    if (!query.trim() || store.isLoading) return;
 
     set({
-      nodes: [...state.nodes, ...newNodes],
-      edges: [...state.edges, ...newEdges],
-      sessions: [session, ...state.sessions],
-      currentSessionId: sessionId,
-      activeNodeId: queryNodeId,
-      detailDrawerOpen: true,
-      isResearching: false,
-      agentState: 'complete',
-      streamingText: '',
+      isLoading: true,
+      error: null,
+      agentState: "searching",
+      activeQuery: query.trim(),
+      papers: [],
+      synthesisReport: "",
+      selectedPaper: null,
+      workflowSteps: DEFAULT_WORKFLOW.map((s) => ({ ...s })),
     });
-  },
 
-  addDocument: (response: IngestResponse) => {
-    const state = get();
-    const docNodeId = nanoid();
-    const newNodes: GraphNode[] = [{
-      id: docNodeId,
-      label: response.title.length > 35 ? response.title.slice(0, 35) + '…' : response.title,
-      type: 'document',
-      x: (Math.random() - 0.5) * 6,
-      y: (Math.random() - 0.5) * 4,
-      z: (Math.random() - 0.5) * 6,
-      summary: `Document with ${response.chunks} chunks`,
-      color: NODE_COLORS.document,
-    }];
-    const newEdges: GraphEdge[] = [];
+    store.updateWorkflowStep("query", "complete");
+    store.updateWorkflowStep("search", "active");
 
-    response.concepts.forEach((concept, i) => {
-      const angle = (i / Math.max(response.concepts.length, 1)) * Math.PI * 2;
-      const nodeId = nanoid();
-      newNodes.push({
-        id: nodeId,
-        label: concept,
-        type: 'concept',
-        x: newNodes[0].x + Math.cos(angle) * 2.5,
-        y: newNodes[0].y + (Math.random() - 0.5) * 2,
-        z: newNodes[0].z + Math.sin(angle) * 2.5,
-        parentId: docNodeId,
-        color: NODE_COLORS.concept,
+    try {
+      const response = await fetch("/api/research", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: query.trim() }),
       });
-      newEdges.push({ id: nanoid(), source: docNodeId, target: nodeId, strength: 0.8 });
-    });
 
-    set({
-      nodes: [...state.nodes, ...newNodes],
-      edges: [...state.edges, ...newEdges],
-      agentState: 'complete',
-    });
-  },
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "Request failed" }));
+        throw new Error(errorData.error || `Request failed with status ${response.status}`);
+      }
 
-  selectNode: (id) => {
-    const state = get();
-    const node = state.nodes.find((n) => n.id === id);
-    let cameraPos: [number, number, number] | null = null;
-    if (node) {
-      cameraPos = [node.x * 1.3, node.y + 1, node.z + 5];
+      const data = await response.json();
+
+      set({
+        papers: data.papers || [],
+        synthesisReport: data.report || "",
+        agentState: "complete",
+        isLoading: false,
+      });
+
+      /* Mark all workflow steps as complete */
+      const steps = get().workflowSteps.map((s) => ({
+        ...s,
+        status: "complete" as const,
+        timestamp: s.timestamp || Date.now(),
+      }));
+      set({ workflowSteps: steps });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "An unexpected error occurred";
+      set({
+        error: message,
+        agentState: "error",
+        isLoading: false,
+      });
     }
-    set({ 
-      activeNodeId: id, 
-      detailDrawerOpen: id !== null,
-      targetCameraPosition: cameraPos,
-    });
   },
-  hoverNode: (id) => set({ hoveredNodeId: id }),
-  setAgentState: (s: AgentState) => set({ agentState: s }),
-  setResearching: (v) => set({ isResearching: v, agentState: v ? 'searching' : 'idle' }),
-  setStreamingText: (t) => set({ streamingText: t }),
-  setResearchMode: (m) => set({ researchMode: m }),
-  setActivePreview: (p: PreviewType) => set({ activePreview: p }),
-  toggleSearchPanel: () => set((s) => ({ searchPanelOpen: !s.searchPanelOpen })),
-  toggleDetailDrawer: () => set((s) => ({ detailDrawerOpen: !s.detailDrawerOpen })),
-  toggleHistoryPanel: () => set((s) => ({ historyPanelOpen: !s.historyPanelOpen })),
-  toggleSettingsPanel: () => set((s) => ({ settingsPanelOpen: !s.settingsPanelOpen })),
-  clearGraph: () => set({ nodes: [], edges: [], activeNodeId: null, hoveredNodeId: null, detailDrawerOpen: false, agentState: 'idle' }),
-  loadSession: (session, nodes, edges) => set({ nodes, edges, currentSessionId: session.id, activeNodeId: null }),
-
-  // Chat actions
-  addChatMessage: (msg: ChatMessage) => set((s) => ({ chatMessages: [...s.chatMessages, msg] })),
-  updateLastAssistantMessage: (content: string, followUps?: string[]) => set((s) => {
-    const msgs = [...s.chatMessages];
-    const lastIdx = msgs.length - 1;
-    if (lastIdx >= 0 && msgs[lastIdx].role === 'assistant') {
-      msgs[lastIdx] = { ...msgs[lastIdx], content, followUps };
-    }
-    return { chatMessages: msgs };
-  }),
-  toggleChat: () => set((s) => ({ isChatOpen: !s.isChatOpen })),
-  setChatStreaming: (v: boolean) => set({ isChatStreaming: v }),
-  clearChat: () => set({ chatMessages: [] }),
 }));

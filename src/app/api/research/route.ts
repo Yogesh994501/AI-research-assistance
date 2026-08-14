@@ -1,40 +1,47 @@
-import { NextResponse } from 'next/server';
-import { webSearch } from '@/lib/search';
-import { synthesize } from '@/lib/gemini';
+import { NextRequest, NextResponse } from "next/server";
+import { searchAcademicSources } from "@/lib/search";
+import { synthesizeWithGemini } from "@/lib/gemini";
+import { validateCitations } from "@/lib/citations";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const { query, mode = 'quick' } = await request.json();
+    const body = await request.json();
+    const query = typeof body.query === "string" ? body.query.trim() : "";
 
-    if (!query || typeof query !== 'string' || query.trim().length === 0) {
-      return NextResponse.json({ error: 'Query is required' }, { status: 400 });
+    /* ── Validation ── */
+    if (!query) {
+      return NextResponse.json({ error: "Query is required" }, { status: 400 });
+    }
+    if (query.length > 500) {
+      return NextResponse.json({ error: "Query is too long (max 500 characters)" }, { status: 400 });
     }
 
-    // 1. Multi-Engine Scholarly Search (OpenAlex + Semantic Scholar + arXiv + Serper)
-    const numResults = mode === 'deep' ? 8 : 5;
-    const sources = await webSearch(query, numResults);
+    /* ── Search ── */
+    console.log(`[API] Searching for: "${query}"`);
+    const papers = await searchAcademicSources(query);
 
-    // 2. AI Synthesis & Structured Extractions
-    const sourcesForLLM = sources.map((s) => ({
-      id: s.id,
-      title: s.title,
-      url: s.url,
-      snippet: s.snippet,
-      citationCount: s.citationCount,
-      doi: s.doi,
-    }));
+    if (papers.length === 0) {
+      return NextResponse.json({
+        papers: [],
+        report: `## No Relevant Sources Found\n\nNo sufficiently relevant academic papers were found for: "${query}".\n\nTry:\n- Using more specific terminology\n- Including key academic terms\n- Broadening your topic slightly`,
+      });
+    }
 
-    const { answer, concepts, followUps, paperComparisons } = await synthesize(query, sourcesForLLM, mode);
+    /* ── Synthesize ── */
+    console.log(`[API] Synthesizing report from ${papers.length} papers`);
+    const rawReport = await synthesizeWithGemini(query, papers);
 
-    return NextResponse.json({
-      answer,
-      sources,
-      concepts,
-      followUps,
-      paperComparisons,
-    });
-  } catch (err) {
-    console.error('Research API error:', err);
-    return NextResponse.json({ error: 'Research failed' }, { status: 500 });
+    /* ── Validate Citations ── */
+    const { validText: report, invalidCitations } = validateCitations(rawReport, papers);
+
+    if (invalidCitations.length > 0) {
+      console.warn(`[API] Removed invalid citations: ${invalidCitations.join(", ")}`);
+    }
+
+    return NextResponse.json({ papers, report });
+  } catch (error) {
+    console.error("[API] Research error:", error);
+    const message = error instanceof Error ? error.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
