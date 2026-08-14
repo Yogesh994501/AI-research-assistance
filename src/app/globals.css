@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── CSS Variables (Arctic Cyan by default) ─── */
+:root {
+  --bg-main: #071014;
+  --bg-secondary: #0B151A;
+  --accent: #22D3EE;
+  --accent-secondary: #06B6D4;
+  --accent-light: #67E8F9;
+  --text-primary: #F8FAFC;
+  --text-secondary: #E2E8F0;
+  --text-muted: #94A3B8;
+  --glass-bg: rgba(255, 255, 255, 0.07);
+  --glass-strong: rgba(255, 255, 255, 0.11);
+  --glass-border: rgba(255, 255, 255, 0.14);
+}
+
 /* ─── Base Reset ─── */
 *,
 *::before,
@@ -17,13 +32,26 @@ html {
 }
 
 body {
-  background: #09090b;
-  color: #f4f4f5;
+  background: var(--bg-main);
+  color: var(--text-primary);
   font-family: "Inter", system-ui, -apple-system, sans-serif;
   min-height: 100dvh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Subtle Ambient Background ─── */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(34, 211, 238, 0.08), transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.04), transparent 35%),
+    #071014;
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* ─── Safe Area Support ─── */
@@ -34,102 +62,186 @@ body {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* ─── Custom Scrollbar ─── */
+/* ─── Selection ─── */
+::selection {
+  background: rgba(34, 211, 238, 0.25);
+  color: #F8FAFC;
+}
+
+/* ─── Custom Thin Scrollbar ─── */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(113, 113, 122, 0.3);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(113, 113, 122, 0.5);
-}
-
-/* Firefox */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(113, 113, 122, 0.3) transparent;
-}
-
-/* ─── Selection ─── */
-::selection {
-  background: rgba(6, 182, 212, 0.25);
-  color: #f4f4f5;
-}
-
-/* ─── Slide Deck Panel Utilities ─── */
-.slide-deck-panel {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.panel-header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  flex-shrink: 0;
-}
-
-.panel-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 12px;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-}
-
-.panel-content::-webkit-scrollbar {
-  width: 5px;
-}
-.panel-content::-webkit-scrollbar-thumb {
-  background: rgba(113, 113, 122, 0.35);
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 4px;
 }
-.panel-content::-webkit-scrollbar-thumb:hover {
-  background: rgba(6, 182, 212, 0.6);
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 211, 238, 0.5);
 }
 
-/* ─── Glass Utilities ─── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+/* ─── Premium Glassmorphism Design System ─── */
 @layer utilities {
-  .glass {
-    @apply backdrop-blur-xl bg-zinc-950/60 border border-zinc-800/80;
+  /* Major content glass panel */
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.10);
+    border-radius: 16px;
   }
-  .glass-elevated {
-    @apply backdrop-blur-xl bg-zinc-900/70 border border-zinc-700/60;
-  }
-  .glass-subtle {
-    @apply backdrop-blur-md bg-zinc-950/40 border border-zinc-800/50;
-  }
-  .glass-interactive {
-    @apply glass transition-all duration-200 hover:bg-zinc-900/60 hover:border-zinc-700/80;
-  }
-  .glow-accent {
-    box-shadow: 0 0 20px rgba(6, 182, 212, 0.15), 0 0 40px rgba(6, 182, 212, 0.05);
-  }
-  .glow-accent-strong {
-    box-shadow: 0 0 30px rgba(6, 182, 212, 0.25), 0 0 60px rgba(6, 182, 212, 0.1);
-  }
-  .text-gradient {
-    @apply bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent;
-  }
-}
 
-/* ─── Ambient Background ─── */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background: radial-gradient(ellipse at 20% 50%, rgba(6, 182, 212, 0.03) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(99, 102, 241, 0.02) 0%, transparent 50%);
-  pointer-events: none;
-  z-index: 0;
+  /* Stronger elevated glass surface (headers, modals) */
+  .glass-panel-elevated {
+    background: rgba(255, 255, 255, 0.10);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow:
+      0 12px 40px rgba(0, 0, 0, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    border-radius: 16px;
+  }
+
+  /* Paper Card White Glass */
+  .paper-card {
+    background: rgba(255, 255, 255, 0.055);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-radius: 12px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .paper-card:hover {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(34, 211, 238, 0.35);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  }
+
+  /* Floating Slide Deck Glass */
+  .slide-deck {
+    background: rgba(255, 255, 255, 0.075);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    border-radius: 16px;
+  }
+
+  /* Individual Slide Glass */
+  .slide-card {
+    background: rgba(255, 255, 255, 0.095);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(16px);
+    border-radius: 12px;
+  }
+
+  /* Primary Arctic Cyan Button */
+  .btn-primary {
+    background: rgba(34, 211, 238, 0.12);
+    border: 1px solid rgba(34, 211, 238, 0.40);
+    color: #67E8F9;
+    transition: all 0.15s ease-out;
+  }
+  .btn-primary:hover {
+    background: rgba(34, 211, 238, 0.20);
+    border-color: #22D3EE;
+    color: #F8FAFC;
+    box-shadow: 0 0 16px rgba(34, 211, 238, 0.25);
+  }
+
+  /* Secondary Translucent White Button */
+  .btn-secondary {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: #E2E8F0;
+    transition: all 0.15s ease-out;
+  }
+  .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.10);
+    border-color: rgba(255, 255, 255, 0.22);
+    color: #FFFFFF;
+  }
+
+  /* Glass Search Bar */
+  .search-glass {
+    background: rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    transition: all 0.25s ease-out;
+  }
+  .search-glass:focus-within {
+    border-color: rgba(34, 211, 238, 0.55);
+    background: rgba(255, 255, 255, 0.09);
+    box-shadow: 0 0 24px rgba(34, 211, 238, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+
+  /* Glass Tab Active / Inactive */
+  .tab-active {
+    background: rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(34, 211, 238, 0.30);
+    color: #67E8F9;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+  .tab-inactive {
+    color: #94A3B8;
+    transition: all 0.15s ease-out;
+  }
+  .tab-inactive:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: #E2E8F0;
+  }
+
+  /* Citation Glass Pill */
+  .citation-pill {
+    background: rgba(34, 211, 238, 0.10);
+    border: 1px solid rgba(34, 211, 238, 0.28);
+    color: #67E8F9;
+    border-radius: 6px;
+    transition: all 0.15s ease-out;
+  }
+  .citation-pill:hover {
+    background: rgba(34, 211, 238, 0.22);
+    border-color: #22D3EE;
+    color: #FFFFFF;
+    box-shadow: 0 0 12px rgba(34, 211, 238, 0.35);
+    transform: scale(1.04);
+  }
+
+  /* Slide Deck Panel Strict Scrolling */
+  .slide-deck-panel {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .panel-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    flex-shrink: 0;
+  }
+  .panel-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 /* ─── Reduced Motion ─── */

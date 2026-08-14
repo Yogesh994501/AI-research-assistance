@@ -25,25 +25,25 @@ export default function BottomSheet({ isOpen, onClose, title, children }: Bottom
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/70 backdrop-blur-sm transition-opacity duration-300 lg:hidden">
+    <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/75 backdrop-blur-sm transition-opacity duration-300 lg:hidden">
       {/* Backdrop Tap to close */}
       <div className="flex-1" onClick={onClose} />
 
-      {/* Sheet Modal Container */}
-      <div className="safe-bottom max-h-[85vh] w-full overflow-hidden rounded-t-2xl border-t border-zinc-700/80 bg-zinc-950/95 p-4 shadow-2xl backdrop-blur-2xl animate-slide-up">
+      {/* Sheet Modal Container (White Glass Elevated) */}
+      <div className="safe-bottom max-h-[85vh] w-full overflow-hidden rounded-t-3xl border-t border-white/[0.18] bg-white/[0.08] p-4 shadow-2xl backdrop-blur-2xl animate-slide-up">
         {/* Drag Pill Handle */}
-        <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-zinc-700/60" />
+        <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-white/20" />
 
         {/* Header */}
         <div className="mb-3 flex items-center justify-between">
           {title ? (
-            <h3 className="text-sm font-semibold text-zinc-100">{title}</h3>
+            <h3 className="text-sm font-bold text-white">{title}</h3>
           ) : (
             <div />
           )}
           <button
             onClick={onClose}
-            className="flex items-center justify-center rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition active:scale-95"
+            className="flex items-center justify-center rounded-lg p-1.5 text-[#94A3B8] hover:bg-white/[0.10] hover:text-white transition active:scale-95"
             aria-label="Close bottom sheet"
           >
             <X className="h-4 w-4 shrink-0" />

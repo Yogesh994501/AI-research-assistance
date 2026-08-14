@@ -9,20 +9,32 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        surface: {
-          DEFAULT: "rgba(9, 9, 11, 0.6)",
-          solid: "#09090b",
-          elevated: "rgba(24, 24, 27, 0.8)",
-          hover: "rgba(39, 39, 42, 0.5)",
+        bg: {
+          main: "#071014",
+          secondary: "#0B151A",
+        },
+        glass: {
+          surface: "rgba(255, 255, 255, 0.07)",
+          strong: "rgba(255, 255, 255, 0.11)",
+          card: "rgba(255, 255, 255, 0.055)",
+          cardHover: "rgba(255, 255, 255, 0.09)",
+          slide: "rgba(255, 255, 255, 0.095)",
+          border: "rgba(255, 255, 255, 0.14)",
+          borderStrong: "rgba(255, 255, 255, 0.20)",
         },
         accent: {
-          DEFAULT: "#06b6d4",
-          dim: "rgba(6, 182, 212, 0.15)",
-          glow: "rgba(6, 182, 212, 0.3)",
+          DEFAULT: "#22D3EE", // Arctic Cyan (Theme A)
+          secondary: "#06B6D4",
+          dim: "rgba(34, 211, 238, 0.12)",
+          glow: "rgba(34, 211, 238, 0.35)",
+          light: "#67E8F9",
         },
-        success: "#22c55e",
-        warning: "#f59e0b",
-        danger: "#ef4444",
+        txt: {
+          primary: "#F8FAFC",
+          secondary: "#E2E8F0",
+          muted: "#94A3B8",
+          dim: "#64748B",
+        },
       },
       fontFamily: {
         sans: ["var(--font-inter)", "system-ui", "-apple-system", "sans-serif"],
@@ -30,25 +42,26 @@ const config: Config = {
       },
       backdropBlur: {
         glass: "20px",
+        heavy: "24px",
       },
       animation: {
         "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         "spin-slow": "spin 8s linear infinite",
-        "fade-in": "fadeIn 0.3s ease-out",
-        "slide-up": "slideUp 0.3s ease-out",
-        "slide-down": "slideDown 0.3s ease-out",
+        "fade-in": "fadeIn 0.25s ease-out",
+        "slide-up": "slideUp 0.25s ease-out",
+        "slide-down": "slideDown 0.25s ease-out",
       },
       keyframes: {
         fadeIn: {
-          "0%": { opacity: "0" },
-          "100%": { opacity: "1" },
+          "0%": { opacity: "0", transform: "scale(0.99)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
         },
         slideUp: {
-          "0%": { transform: "translateY(16px)", opacity: "0" },
+          "0%": { transform: "translateY(12px)", opacity: "0" },
           "100%": { transform: "translateY(0)", opacity: "1" },
         },
         slideDown: {
-          "0%": { transform: "translateY(-16px)", opacity: "0" },
+          "0%": { transform: "translateY(-12px)", opacity: "0" },
           "100%": { transform: "translateY(0)", opacity: "1" },
         },
       },

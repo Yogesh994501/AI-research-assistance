@@ -5,11 +5,11 @@ import { cn } from "@/lib/utils";
 import type { AgentState } from "@/types";
 
 const STATE_CONFIG: Record<AgentState, { label: string; color: string; bgColor: string; borderColor: string }> = {
-  idle: { label: "Ready", color: "text-zinc-400", bgColor: "bg-zinc-500/10", borderColor: "border-zinc-600/40" },
-  searching: { label: "Searching", color: "text-cyan-400", bgColor: "bg-cyan-500/10", borderColor: "border-cyan-500/40" },
-  synthesizing: { label: "Synthesizing", color: "text-violet-400", bgColor: "bg-violet-500/10", borderColor: "border-violet-500/40" },
-  complete: { label: "Complete", color: "text-emerald-400", bgColor: "bg-emerald-500/10", borderColor: "border-emerald-500/40" },
-  error: { label: "Error", color: "text-red-400", bgColor: "bg-red-500/10", borderColor: "border-red-500/40" },
+  idle: { label: "Ready", color: "text-[#94A3B8]", bgColor: "bg-white/[0.04]", borderColor: "border-white/[0.12]" },
+  searching: { label: "Searching", color: "text-cyan-300", bgColor: "bg-cyan-400/10", borderColor: "border-cyan-400/40" },
+  synthesizing: { label: "Synthesizing", color: "text-purple-300", bgColor: "bg-purple-400/10", borderColor: "border-purple-400/40" },
+  complete: { label: "Complete", color: "text-emerald-300", bgColor: "bg-emerald-400/10", borderColor: "border-emerald-400/40" },
+  error: { label: "Error", color: "text-rose-300", bgColor: "bg-rose-400/10", borderColor: "border-rose-400/40" },
 };
 
 export default function AgentStateOrb() {
@@ -40,11 +40,11 @@ export default function AgentStateOrb() {
           <div
             className={cn(
               "absolute inset-[30%] rounded-full transition-all duration-300",
-              agentState === "idle" && "bg-zinc-600",
-              agentState === "searching" && "bg-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.5)]",
-              agentState === "synthesizing" && "bg-violet-400 shadow-[0_0_12px_rgba(139,92,246,0.5)]",
-              agentState === "complete" && "bg-emerald-400 shadow-[0_0_12px_rgba(34,197,94,0.5)]",
-              agentState === "error" && "bg-red-400 shadow-[0_0_12px_rgba(239,68,68,0.5)]"
+              agentState === "idle" && "bg-slate-400",
+              agentState === "searching" && "bg-cyan-400 shadow-[0_0_14px_#22D3EE]",
+              agentState === "synthesizing" && "bg-purple-400 shadow-[0_0_14px_#C084FC]",
+              agentState === "complete" && "bg-emerald-400 shadow-[0_0_14px_#34D399]",
+              agentState === "error" && "bg-rose-400 shadow-[0_0_14px_#FB7185]"
             )}
           />
         </div>
@@ -52,11 +52,11 @@ export default function AgentStateOrb() {
         {agentState !== "idle" && (
           <div
             className={cn(
-              "absolute -inset-2 rounded-full opacity-20 blur-md transition-all duration-500",
+              "absolute -inset-2 rounded-full opacity-25 blur-md transition-all duration-500",
               agentState === "searching" && "bg-cyan-400",
-              agentState === "synthesizing" && "bg-violet-400",
+              agentState === "synthesizing" && "bg-purple-400",
               agentState === "complete" && "bg-emerald-400",
-              agentState === "error" && "bg-red-400"
+              agentState === "error" && "bg-rose-400"
             )}
           />
         )}
@@ -64,8 +64,8 @@ export default function AgentStateOrb() {
 
       {/* Label */}
       <div className="text-center">
-        <p className={cn("text-xs font-medium", config.color)}>{config.label}</p>
-        <p className="text-[10px] text-zinc-600 mt-0.5">Agent Workflow State</p>
+        <p className={cn("text-xs font-bold", config.color)}>{config.label}</p>
+        <p className="text-[10px] text-[#94A3B8] mt-0.5 font-medium">Agent Pipeline State</p>
       </div>
     </div>
   );

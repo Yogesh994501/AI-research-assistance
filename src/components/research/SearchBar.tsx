@@ -23,12 +23,11 @@ export default function SearchBar() {
     <form onSubmit={handleSubmit} className="w-full">
       <div
         className={cn(
-          "relative flex items-center gap-1.5 sm:gap-2 rounded-xl",
-          "glass transition-all duration-300",
-          "focus-within:border-cyan-500/50 focus-within:glow-accent"
+          "search-glass relative flex items-center gap-2 rounded-xl",
+          "transition-all duration-300"
         )}
       >
-        <div className="pl-3 sm:pl-4 text-zinc-400 flex items-center justify-center shrink-0">
+        <div className="pl-3.5 sm:pl-4 text-[#94A3B8] flex items-center justify-center shrink-0">
           {isLoading ? (
             <Loader2 className="h-4 w-4 animate-spin text-cyan-400 shrink-0" />
           ) : (
@@ -42,8 +41,8 @@ export default function SearchBar() {
           placeholder="Ask a research question…"
           disabled={isLoading}
           className={cn(
-            "flex-1 min-w-0 bg-transparent py-2.5 sm:py-3 text-xs sm:text-sm text-zinc-100",
-            "placeholder:text-zinc-500 placeholder:text-xs sm:placeholder:text-sm focus:outline-none",
+            "flex-1 min-w-0 bg-transparent py-2.5 sm:py-3 text-xs sm:text-sm text-[#F8FAFC]",
+            "placeholder:text-[#94A3B8]/70 placeholder:text-xs sm:placeholder:text-sm focus:outline-none",
             "disabled:opacity-50"
           )}
           aria-label="Research query input"
@@ -52,16 +51,13 @@ export default function SearchBar() {
           type="submit"
           disabled={isLoading || !input.trim()}
           className={cn(
-            "mr-1.5 sm:mr-2 flex items-center justify-center gap-1 sm:gap-1.5 rounded-lg px-2.5 sm:px-4 py-1.5 text-xs font-medium shrink-0",
-            "bg-cyan-500/15 text-cyan-400 border border-cyan-500/30",
-            "transition-all duration-200",
-            "hover:bg-cyan-500/25 hover:border-cyan-500/50 active:scale-95",
-            "disabled:opacity-30 disabled:cursor-not-allowed",
-            "focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+            "btn-primary mr-1.5 sm:mr-2 flex items-center justify-center gap-1.5 rounded-lg px-3 sm:px-4 py-1.5 text-xs font-medium shrink-0",
+            "active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-cyan-500/40",
+            "focus:outline-none focus:ring-2 focus:ring-cyan-400/40"
           )}
           aria-label="Execute research search"
         >
-          <Sparkles className="h-3.5 w-3.5 shrink-0" />
+          <Sparkles className="h-3.5 w-3.5 shrink-0 text-cyan-300" />
           <span className="hidden xs:inline sm:inline">Search</span>
         </button>
       </div>

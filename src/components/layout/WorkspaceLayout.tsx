@@ -16,12 +16,12 @@ export default function WorkspaceLayout() {
   const { activeMobilePanel, leftPanelView, is3DExpanded } = useResearchStore();
 
   return (
-    <div className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-surface-solid text-zinc-100">
+    <div className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-[#071014] text-[#F8FAFC]">
       {/* 3D Background Canvas Layer */}
       <div
         className={cn(
           "pointer-events-none absolute inset-0 z-0 transition-opacity duration-700",
-          is3DExpanded ? "pointer-events-auto opacity-100" : "opacity-40"
+          is3DExpanded ? "pointer-events-auto opacity-100" : "opacity-35"
         )}
       >
         <ResearchCanvas />
@@ -30,12 +30,12 @@ export default function WorkspaceLayout() {
       {/* Top Header */}
       <Header />
 
-      {/* Main Workspace Area (Desktop 3-Panel) */}
-      <main className="relative z-10 hidden flex-1 gap-3 overflow-hidden p-3 lg:grid lg:grid-cols-12">
+      {/* Main Workspace Area (Desktop 3-Panel Grid) */}
+      <main className="relative z-10 hidden flex-1 gap-3.5 overflow-hidden p-3.5 lg:grid lg:grid-cols-12">
         {/* Left Panel: Literature Index (3 cols) */}
         <div className="col-span-3 h-full overflow-hidden">
           {leftPanelView === "graph" ? (
-            <div className="relative h-full w-full overflow-hidden rounded-xl border border-zinc-800/80 bg-zinc-950/60 backdrop-blur-xl">
+            <div className="glass-panel relative h-full w-full overflow-hidden">
               <div className="absolute inset-0">
                 <ResearchCanvas />
               </div>
@@ -50,7 +50,7 @@ export default function WorkspaceLayout() {
           <CenterPanel />
         </div>
 
-        {/* Right Panel: Agent Inspector (3 cols) */}
+        {/* Right Panel: Agent Inspector / Slide Deck (3 cols) */}
         <div className="col-span-3 h-full overflow-hidden">
           <RightPanel />
         </div>

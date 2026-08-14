@@ -7,8 +7,8 @@ export default function AgentWorkflow() {
   const { workflowSteps } = useResearchStore();
 
   return (
-    <div className="px-3 py-2">
-      <p className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider mb-3 px-1">
+    <div className="px-3.5 py-3">
+      <p className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-wider mb-3 px-1">
         Execution Pipeline
       </p>
       <div>

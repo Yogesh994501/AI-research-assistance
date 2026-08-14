@@ -10,36 +10,36 @@ export default function LeftPanel() {
   const { papers, selectedPaper, setSelectedPaper, leftPanelView, setLeftPanelView } = useResearchStore();
 
   return (
-    <div className="flex h-full flex-col glass rounded-xl overflow-hidden">
+    <div className="glass-panel flex h-full flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800/60">
-        <h2 className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Literature Index</h2>
-        <div className="flex rounded-lg bg-zinc-900/60 border border-zinc-800/50 p-0.5">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.10] bg-white/[0.03] backdrop-blur-xl shrink-0">
+        <h2 className="text-xs font-semibold text-[#F8FAFC] tracking-wider uppercase">Literature Index</h2>
+        <div className="flex rounded-lg bg-white/[0.04] border border-white/[0.10] p-0.5 shrink-0">
           <button
             onClick={() => setLeftPanelView("papers")}
             className={cn(
-              "flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium transition",
+              "flex items-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-medium transition-all duration-150",
               leftPanelView === "papers"
-                ? "bg-zinc-800 text-zinc-200"
-                : "text-zinc-500 hover:text-zinc-300"
+                ? "tab-active"
+                : "tab-inactive"
             )}
             aria-label="Paper list view"
           >
-            <List className="h-3 w-3" />
-            Papers
+            <List className="h-3 w-3 shrink-0" />
+            <span>Papers</span>
           </button>
           <button
             onClick={() => setLeftPanelView("graph")}
             className={cn(
-              "flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium transition",
+              "flex items-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-medium transition-all duration-150",
               leftPanelView === "graph"
-                ? "bg-zinc-800 text-zinc-200"
-                : "text-zinc-500 hover:text-zinc-300"
+                ? "tab-active"
+                : "tab-inactive"
             )}
             aria-label="3D graph view"
           >
-            <GitFork className="h-3 w-3" />
-            3D Graph
+            <GitFork className="h-3 w-3 shrink-0" />
+            <span>3D Graph</span>
           </button>
         </div>
       </div>

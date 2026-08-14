@@ -31,51 +31,51 @@ export default function CenterPanel() {
   };
 
   return (
-    <div className="flex h-full flex-col glass rounded-xl overflow-hidden">
-      {/* Center Panel Header with Mode Tabs & Action Buttons */}
-      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 border-b border-zinc-800/60 bg-zinc-950/40">
+    <div className="glass-panel flex h-full flex-col overflow-hidden">
+      {/* Center Panel Header with Mode Tabs & Action Controls */}
+      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 border-b border-white/[0.10] bg-white/[0.03] backdrop-blur-xl shrink-0">
         {/* Navigation Tabs */}
-        <div className="flex items-center gap-1 rounded-lg bg-zinc-900/80 p-0.5 border border-zinc-800/80">
+        <div className="flex items-center gap-1 rounded-lg bg-white/[0.04] p-0.5 border border-white/[0.10]">
           <button
             onClick={() => setActiveView("report")}
             className={cn(
-              "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition",
+              "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-150",
               activeView === "report"
-                ? "bg-zinc-800 text-zinc-100 shadow-sm"
-                : "text-zinc-400 hover:text-zinc-200"
+                ? "tab-active"
+                : "tab-inactive"
             )}
           >
-            <FileText className="h-3.5 w-3.5" />
-            Grounded Synthesis
+            <FileText className="h-3.5 w-3.5 shrink-0" />
+            <span>Grounded Synthesis</span>
           </button>
           <button
             onClick={() => setActiveView("chat")}
             className={cn(
-              "relative flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition",
+              "relative flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-150",
               activeView === "chat"
-                ? "bg-cyan-950/60 text-cyan-300 border border-cyan-500/40 shadow-sm"
-                : "text-zinc-400 hover:text-zinc-200"
+                ? "tab-active"
+                : "tab-inactive"
             )}
           >
-            <Bot className="h-3.5 w-3.5 text-cyan-400" />
-            AI Assistant
-            <span className="flex h-2 w-2 relative">
+            <Bot className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
+            <span>AI Assistant</span>
+            <span className="flex h-1.5 w-1.5 relative">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-cyan-400"></span>
             </span>
           </button>
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 shrink-0">
           {synthesisReport && (
             <button
               onClick={handleExportMarkdown}
-              className="flex items-center gap-1 rounded-lg border border-zinc-700/60 bg-zinc-900/60 px-2.5 py-1 text-xs text-zinc-300 transition hover:bg-zinc-800 hover:text-zinc-100"
+              className="btn-secondary flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium"
               title="Download report as Markdown"
             >
-              <Download className="h-3 w-3" />
-              Export .md
+              <Download className="h-3 w-3 shrink-0" />
+              <span>Export .md</span>
             </button>
           )}
 
@@ -83,11 +83,11 @@ export default function CenterPanel() {
             <button
               onClick={handleResynthesize}
               disabled={isLoading}
-              className="flex items-center gap-1 rounded-lg border border-cyan-500/30 bg-cyan-950/30 px-2.5 py-1 text-xs text-cyan-300 transition hover:bg-cyan-900/40 disabled:opacity-30"
+              className="btn-primary flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium disabled:opacity-30"
               title="Re-run search & synthesis"
             >
-              <RotateCcw className={cn("h-3 w-3", isLoading && "animate-spin")} />
-              Re-Synthesize
+              <RotateCcw className={cn("h-3 w-3 shrink-0", isLoading && "animate-spin")} />
+              <span>Re-Synthesize</span>
             </button>
           )}
         </div>
@@ -97,14 +97,14 @@ export default function CenterPanel() {
       <div className="flex-1 overflow-hidden">
         {error ? (
           <div className="flex h-full flex-col items-center justify-center py-16 gap-3 px-6 text-center">
-            <AlertCircle className="h-8 w-8 text-red-400/60" />
-            <p className="text-sm text-red-400 max-w-md">{error}</p>
+            <AlertCircle className="h-8 w-8 text-rose-400/80" />
+            <p className="text-sm text-rose-300 max-w-md">{error}</p>
             <button
               onClick={resetResearch}
-              className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-medium bg-zinc-800/60 text-zinc-300 border border-zinc-700/60 hover:bg-zinc-700/60 transition"
+              className="btn-secondary flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-medium"
             >
-              <RefreshCw className="h-3 w-3" />
-              Try Again
+              <RefreshCw className="h-3.5 w-3.5" />
+              <span>Try Again</span>
             </button>
           </div>
         ) : activeView === "chat" ? (

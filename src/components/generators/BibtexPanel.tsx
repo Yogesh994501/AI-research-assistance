@@ -54,57 +54,57 @@ export default function BibtexPanel({ onBack }: BibtexPanelProps) {
   };
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden bg-zinc-950/70 select-none">
+    <div className="slide-deck slide-deck-panel flex h-full w-full flex-col overflow-hidden select-none">
       {/* ─── Sticky Header ─── */}
-      <div className="sticky top-0 z-20 flex flex-col gap-2 border-b border-zinc-800/80 bg-zinc-950/95 px-3 py-2.5 backdrop-blur-xl shrink-0">
+      <div className="panel-header sticky top-0 z-20 flex flex-col gap-2.5 border-b border-white/[0.12] bg-white/[0.06] px-3.5 py-3 backdrop-blur-2xl shrink-0">
         <div className="flex items-center justify-between gap-2">
           <button
             onClick={onBack}
-            className="flex items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-900/80 px-2.5 py-1 text-xs font-medium text-zinc-300 transition hover:bg-zinc-800 hover:text-zinc-100 active:scale-95 shrink-0"
+            className="btn-secondary flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold shrink-0"
             aria-label="Back to Agent Inspector"
           >
             <ArrowLeft className="h-3.5 w-3.5 text-purple-400 shrink-0" />
-            <span>Back</span>
+            <span>← Back</span>
           </button>
 
           <div className="flex items-center gap-1.5 shrink-0">
             <button
               onClick={handleCopy}
-              className="flex items-center gap-1 rounded-lg border border-zinc-700/80 bg-zinc-900 px-2.5 py-1 text-xs font-medium text-zinc-300 transition hover:bg-zinc-800 hover:text-zinc-100 active:scale-95"
+              className="btn-secondary flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium"
             >
-              {copied ? <Check className="h-3 w-3 text-green-400 shrink-0" /> : <Copy className="h-3 w-3 shrink-0" />}
+              {copied ? <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0" /> : <Copy className="h-3.5 w-3.5 shrink-0" />}
               <span>{copied ? "Copied" : "Copy"}</span>
             </button>
             <button
               onClick={handleDownload}
-              className="flex items-center gap-1 rounded-lg border border-purple-500/40 bg-purple-950/40 px-2.5 py-1 text-xs font-medium text-purple-300 transition hover:bg-purple-900/50 active:scale-95"
+              className="btn-primary flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium"
             >
-              <Download className="h-3 w-3 shrink-0" />
+              <Download className="h-3.5 w-3.5 shrink-0" />
               <span>.bib</span>
             </button>
           </div>
         </div>
 
         <div className="flex items-center gap-2 pt-0.5">
-          <div className="flex h-6 w-6 items-center justify-center rounded-md border border-purple-500/30 bg-purple-950/50 text-purple-400 shrink-0">
+          <div className="flex h-6 w-6 items-center justify-center rounded-lg border border-purple-400/30 bg-purple-400/10 text-purple-300 shrink-0">
             <FileDown className="h-3.5 w-3.5" />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="text-xs font-semibold text-zinc-100 truncate">Export BibTeX Library</h3>
-            <p className="text-[10px] text-zinc-500 truncate">{papers.length} citations ready for LaTeX & Zotero</p>
+            <h3 className="text-xs font-bold text-white truncate">Export BibTeX Library</h3>
+            <p className="text-[10px] text-[#94A3B8] truncate">{papers.length} citations ready for LaTeX & Zotero</p>
           </div>
         </div>
       </div>
 
       {/* ─── Scrollable Code Content ─── */}
-      <div className="flex-1 overflow-y-auto p-3 scroll-smooth">
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/90 p-3 font-mono text-[11px] text-zinc-300">
+      <div className="panel-content flex-1 overflow-y-auto p-3.5 scroll-smooth">
+        <div className="slide-card p-3.5 font-mono text-[11px] text-[#E2E8F0] shadow-inner">
           <pre className="whitespace-pre-wrap leading-relaxed">{bibtexContent}</pre>
         </div>
       </div>
 
       {/* ─── Sticky Footer ─── */}
-      <div className="sticky bottom-0 z-20 flex items-center justify-between border-t border-zinc-800/80 bg-zinc-950/95 px-3 py-2 text-[10px] text-zinc-500 backdrop-blur-xl shrink-0">
+      <div className="sticky bottom-0 z-20 flex items-center justify-between border-t border-white/[0.12] bg-white/[0.06] px-3.5 py-2.5 text-[10px] text-[#94A3B8] backdrop-blur-2xl shrink-0">
         <span>Standard BibTeX UTF-8</span>
         <span>{papers.length} sources</span>
       </div>
