@@ -29,50 +29,54 @@ export default function MobileStudio() {
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-xl border border-zinc-800/80 bg-zinc-950/60 backdrop-blur-xl">
       {/* Top Bar with View Tabs and Action Controls */}
-      <div className="flex items-center justify-between border-b border-zinc-800/60 px-3 py-2 bg-zinc-900/30">
-        <div className="flex rounded-lg bg-zinc-900 border border-zinc-800 p-0.5">
+      <div className="flex items-center justify-between border-b border-zinc-800/60 px-2.5 sm:px-3 py-2 bg-zinc-900/40 shrink-0">
+        <div className="flex rounded-lg bg-zinc-900 border border-zinc-800 p-0.5 shrink-0">
           <button
             onClick={() => setActiveView("report")}
             className={cn(
-              "flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition",
-              activeView === "report" ? "bg-zinc-800 text-zinc-100" : "text-zinc-400"
+              "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition",
+              activeView === "report" ? "bg-zinc-800 text-zinc-100 shadow-sm" : "text-zinc-400 hover:text-zinc-200"
             )}
           >
-            <FileText className="h-3 w-3" />
-            Report
+            <FileText className="h-3.5 w-3.5 shrink-0" />
+            <span>Report</span>
           </button>
           <button
             onClick={() => setActiveView("chat")}
             className={cn(
-              "relative flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition",
+              "relative flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition",
               activeView === "chat"
-                ? "bg-cyan-950 text-cyan-300 border border-cyan-500/40"
-                : "text-zinc-400"
+                ? "bg-cyan-950 text-cyan-300 border border-cyan-500/40 shadow-sm"
+                : "text-zinc-400 hover:text-zinc-200"
             )}
           >
-            <Bot className="h-3 w-3 text-cyan-400" />
-            AI Assistant
+            <Bot className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
+            <span>AI Assistant</span>
+            <span className="flex h-1.5 w-1.5 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-cyan-500"></span>
+            </span>
           </button>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5 shrink-0">
           {synthesisReport && (
             <button
               onClick={handleExportMarkdown}
-              className="rounded-lg border border-zinc-700/60 bg-zinc-900/60 p-1.5 text-zinc-300"
+              className="flex items-center justify-center rounded-lg border border-zinc-700/60 bg-zinc-900/80 p-1.5 text-zinc-300 transition hover:bg-zinc-800 active:scale-95"
               title="Download Markdown"
             >
-              <Download className="h-3.5 w-3.5" />
+              <Download className="h-3.5 w-3.5 shrink-0" />
             </button>
           )}
           {activeQuery && (
             <button
               onClick={() => executeSearch(activeQuery)}
               disabled={isLoading}
-              className="rounded-lg border border-cyan-500/30 bg-cyan-950/30 p-1.5 text-cyan-300"
+              className="flex items-center justify-center rounded-lg border border-cyan-500/30 bg-cyan-950/40 p-1.5 text-cyan-300 transition hover:bg-cyan-900/50 disabled:opacity-30 active:scale-95"
               title="Re-synthesize"
             >
-              <RotateCcw className={cn("h-3.5 w-3.5", isLoading && "animate-spin")} />
+              <RotateCcw className={cn("h-3.5 w-3.5 shrink-0", isLoading && "animate-spin")} />
             </button>
           )}
         </div>

@@ -54,8 +54,13 @@ export default function CameraController() {
       enableZoom={true}
       enableRotate={true}
       minDistance={3}
-      maxDistance={25}
-      dampingFactor={0.05}
+      maxDistance={30}
+      dampingFactor={0.08}
+      enableDamping={true}
+      touches={{
+        ONE: THREE.TOUCH.ROTATE,
+        TWO: THREE.TOUCH.DOLLY_PAN,
+      }}
     />
   );
 }

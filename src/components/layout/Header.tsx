@@ -9,11 +9,11 @@ export default function Header() {
   const { agentState } = useResearchStore();
 
   return (
-    <header className="safe-top flex items-center gap-4 px-4 py-3 border-b border-zinc-800/50 bg-zinc-950/80 backdrop-blur-xl z-20">
+    <header className="safe-top flex items-center justify-between gap-2.5 sm:gap-4 px-3 sm:px-4 py-2.5 sm:py-3 border-b border-zinc-800/50 bg-zinc-950/80 backdrop-blur-xl z-20">
       {/* Logo */}
       <div className="flex items-center gap-2 shrink-0">
-        <div className="relative">
-          <Hexagon className="h-7 w-7 text-cyan-400" />
+        <div className="relative flex items-center justify-center">
+          <Hexagon className="h-6 w-6 sm:h-7 sm:w-7 text-cyan-400 shrink-0" />
           <div
             className={cn(
               "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-2 w-2 rounded-full transition-all",
@@ -27,17 +27,17 @@ export default function Header() {
         </div>
         <div className="hidden sm:block">
           <h1 className="text-sm font-bold text-gradient leading-none">NEXUS3D</h1>
-          <p className="text-[9px] text-zinc-500 uppercase tracking-[0.15em]">Research Studio</p>
+          <p className="text-[9px] text-zinc-500 uppercase tracking-[0.15em] mt-0.5">Research Studio</p>
         </div>
       </div>
 
-      {/* Search */}
-      <div className="flex-1 max-w-2xl">
+      {/* Search Bar */}
+      <div className="flex-1 max-w-2xl min-w-0">
         <SearchBar />
       </div>
 
       {/* Spacer for balance on desktop */}
-      <div className="hidden lg:block w-20" />
+      <div className="hidden lg:block w-20 shrink-0" />
     </header>
   );
 }

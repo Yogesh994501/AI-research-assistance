@@ -31,9 +31,14 @@ function Scene() {
 
 export default function ResearchCanvas() {
   const [mounted, setMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   if (!mounted) {
@@ -45,11 +50,12 @@ export default function ResearchCanvas() {
   }
 
   return (
-    <div className="relative h-full w-full overflow-hidden">
+    <div className="relative h-full w-full overflow-hidden touch-none select-none">
       <Canvas
-        camera={{ position: [0, 0, 10], fov: 60 }}
-        gl={{ antialias: true, alpha: true }}
-        dpr={[1, 2]}
+        camera={{ position: [0, 0, isMobile ? 14 : 10], fov: isMobile ? 65 : 60 }}
+        gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
+        dpr={typeof window !== "undefined" ? Math.min(window.devicePixelRatio, 2) : 1}
+        style={{ touchAction: "none" }}
       >
         <Suspense fallback={null}>
           <Scene />

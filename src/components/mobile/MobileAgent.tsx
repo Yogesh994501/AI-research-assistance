@@ -48,7 +48,7 @@ export default function MobileAgent() {
 
       {/* Active Generator Cards */}
       <div className="mt-3 border-t border-zinc-800/60 pt-3">
-        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+        <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-400 px-1">
           Studio Generators
         </p>
         <div className="flex flex-col gap-2">
@@ -57,18 +57,18 @@ export default function MobileAgent() {
               key={gen.id}
               onClick={() => setActiveModal(gen.id)}
               className={cn(
-                "flex items-center gap-3 rounded-xl border p-2.5 text-left transition",
-                "border-zinc-800/60 bg-zinc-900/60 active:scale-[0.98]"
+                "flex items-center gap-3 rounded-xl border p-3 text-left transition",
+                "border-zinc-800/60 bg-zinc-900/60 active:scale-[0.98] hover:bg-zinc-800/60 hover:border-zinc-700"
               )}
             >
-              <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg border bg-zinc-950/60", gen.color)}>
-                <gen.icon className="h-4 w-4" />
+              <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg border bg-zinc-950/60 shrink-0", gen.color)}>
+                <gen.icon className="h-4 w-4 shrink-0" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-medium text-zinc-200">{gen.label}</p>
                 <p className="text-[10px] text-zinc-500">{gen.desc}</p>
               </div>
-              <ArrowUpRight className="h-3.5 w-3.5 text-zinc-500" />
+              <ArrowUpRight className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
             </button>
           ))}
         </div>
