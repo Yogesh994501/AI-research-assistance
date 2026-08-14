@@ -3,7 +3,18 @@
 import { useMemo, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { BookOpen, Sparkles, Loader2 } from "lucide-react";
+import {
+  BookOpen,
+  Sparkles,
+  Loader2,
+  Search,
+  DownloadCloud,
+  CheckCircle2,
+  Cpu,
+  Layers,
+  ArrowRight,
+  Database,
+} from "lucide-react";
 import { useResearchStore } from "@/store/researchStore";
 import { getCitedPaper } from "@/lib/citations";
 import CitationBadge from "./CitationBadge";
@@ -124,40 +135,153 @@ export default function SynthesisReport() {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4 animate-fade-in">
-        <Loader2 className="h-8 w-8 text-cyan-400 animate-spin" />
-        <p className="text-sm font-semibold text-white">Synthesizing grounded research report…</p>
-        <p className="text-xs text-[#94A3B8] max-w-sm text-center">{activeQuery}</p>
+        <div className="relative flex items-center justify-center">
+          <Loader2 className="h-10 w-10 text-cyan-400 animate-spin" />
+          <div className="absolute inset-0 blur-xl bg-cyan-400/20 rounded-full" />
+        </div>
+        <div className="text-center">
+          <p className="text-sm font-bold text-white tracking-wide">Synthesizing grounded research report…</p>
+          <p className="text-xs text-[#94A3B8] mt-1 max-w-sm font-mono">{activeQuery}</p>
+        </div>
       </div>
     );
   }
 
-  /* Empty State */
+  /* Sophisticated Hero AI Research Empty State */
   if (!synthesisReport) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 gap-4 text-center px-6">
+      <div className="flex flex-col items-center justify-center py-8 px-4 sm:px-6 text-center space-y-6 animate-fade-in max-w-2xl mx-auto">
+        {/* Glowing Hero Icon */}
         <div className="relative">
-          <Sparkles className="h-12 w-12 text-cyan-400/40" />
-          <div className="absolute inset-0 blur-xl bg-cyan-400/10 rounded-full" />
+          <div className="h-16 w-16 rounded-2xl border border-cyan-400/40 bg-cyan-400/10 flex items-center justify-center text-cyan-400 shadow-[0_0_30px_rgba(34,211,238,0.25)]">
+            <Sparkles className="h-8 w-8 stroke-[1.75]" />
+          </div>
+          <div className="absolute -inset-2 rounded-2xl bg-cyan-400/20 blur-xl -z-10 animate-pulse" />
         </div>
+
+        {/* Hero Title & Subtitle */}
         <div>
-          <h2 className="text-base sm:text-lg font-bold text-white">Ask Nexus3D a research question</h2>
-          <p className="text-xs text-[#94A3B8] mt-2 max-w-md leading-relaxed">
-            Multi-engine scholarly search across OpenAlex, arXiv & Semantic Scholar.
-            All findings are synthesized with verified inline citations.
+          <h2 className="text-base sm:text-xl font-bold tracking-tight text-white uppercase">
+            Ask Nexus3D a Research Question
+          </h2>
+          <p className="text-xs text-[#94A3B8] mt-1.5 max-w-md mx-auto leading-relaxed">
+            Multi-engine scholarly search across OpenAlex, arXiv & Semantic Scholar with factual citation grounding.
           </p>
+        </div>
+
+        {/* ─── AI Triangulation Architecture Node Visual ─── */}
+        <div className="w-full rounded-2xl border border-white/[0.12] bg-white/[0.03] p-4 sm:p-5 backdrop-blur-xl shadow-lg">
+          {/* Central Nexus AI Engine */}
+          <div className="mx-auto flex w-max items-center gap-2 rounded-xl border border-cyan-400/40 bg-cyan-400/15 px-4 py-2 text-cyan-300 shadow-[0_0_20px_rgba(34,211,238,0.15)]">
+            <Cpu className="h-4 w-4 text-cyan-400 animate-pulse" />
+            <span className="text-xs font-mono font-bold tracking-wider uppercase">NEXUS AI ENGINE</span>
+            <span className="h-2 w-2 rounded-full bg-cyan-400 animate-ping" />
+          </div>
+
+          {/* SVG Connecting Branches */}
+          <div className="my-2 flex justify-center">
+            <svg className="w-64 h-8" viewBox="0 0 256 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M128 0V16M128 16L40 32M128 16L128 32M128 16L216 32" stroke="rgba(34, 211, 238, 0.4)" strokeWidth="1.5" strokeDasharray="3 3" />
+            </svg>
+          </div>
+
+          {/* 3 Connected Academic Repositories */}
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            <div className="architecture-node p-2 sm:p-2.5 text-center">
+              <span className="text-[10px] font-mono font-semibold text-emerald-400">OpenAlex</span>
+              <p className="text-[9px] text-[#94A3B8]">250M+ Works</p>
+            </div>
+            <div className="architecture-node p-2 sm:p-2.5 text-center">
+              <span className="text-[10px] font-mono font-semibold text-amber-400">arXiv</span>
+              <p className="text-[9px] text-[#94A3B8]">Preprints API</p>
+            </div>
+            <div className="architecture-node p-2 sm:p-2.5 text-center">
+              <span className="text-[10px] font-mono font-semibold text-purple-400">Semantic Scholar</span>
+              <p className="text-[9px] text-[#94A3B8]">Citation Graph</p>
+            </div>
+          </div>
+        </div>
+
+        {/* ─── Horizontal Research Pipeline Stepper ─── */}
+        <div className="w-full">
+          <p className="text-[10px] font-mono uppercase tracking-widest text-[#94A3B8] mb-3">
+            Autonomous Pipeline Flow
+          </p>
+          <div className="flex items-center justify-between gap-1 overflow-x-auto py-1">
+            {[
+              { num: "01", label: "Search", icon: Search, active: true },
+              { num: "02", label: "Retrieve", icon: DownloadCloud, active: false },
+              { num: "03", label: "Rank", icon: Layers, active: false },
+              { num: "04", label: "Synthesize", icon: Cpu, active: false },
+              { num: "05", label: "Verify", icon: CheckCircle2, active: false },
+            ].map((step, idx, arr) => (
+              <div key={step.num} className="flex items-center gap-1 shrink-0">
+                <div
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-mono border transition-all",
+                    step.active
+                      ? "border-cyan-400/50 bg-cyan-400/15 text-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.2)]"
+                      : "border-white/[0.08] bg-white/[0.03] text-[#94A3B8]"
+                  )}
+                >
+                  <span className="text-[10px] font-bold">{step.num}</span>
+                  <step.icon className="h-3 w-3" />
+                  <span className="text-[11px] uppercase font-semibold">{step.label}</span>
+                </div>
+                {idx < arr.length - 1 && (
+                  <ArrowRight className="h-3 w-3 text-white/20 shrink-0 mx-0.5" />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ─── Research Engine Status Bottom Card ─── */}
+        <div className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] p-3 backdrop-blur-md">
+          <div className="flex items-center justify-between text-[11px] mb-2 px-1">
+            <span className="font-mono uppercase tracking-wider text-xs font-bold text-white">Research Engine Status</span>
+            <span className="text-[10px] text-emerald-400 font-mono flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              All Systems Operational
+            </span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t border-white/[0.06] text-xs">
+            <div className="flex items-center gap-1.5 text-[#CBD5E1]">
+              <span className="h-2 w-2 rounded-full bg-emerald-400" />
+              <span className="text-[11px]">OpenAlex: <strong className="text-white">Ready</strong></span>
+            </div>
+            <div className="flex items-center gap-1.5 text-[#CBD5E1]">
+              <span className="h-2 w-2 rounded-full bg-emerald-400" />
+              <span className="text-[11px]">arXiv: <strong className="text-white">Ready</strong></span>
+            </div>
+            <div className="flex items-center gap-1.5 text-[#CBD5E1]">
+              <span className="h-2 w-2 rounded-full bg-emerald-400" />
+              <span className="text-[11px]">S2 Graph: <strong className="text-white">Ready</strong></span>
+            </div>
+            <div className="flex items-center gap-1.5 text-[#CBD5E1]">
+              <span className="h-2 w-2 rounded-full bg-emerald-400" />
+              <span className="text-[11px]">Gemini 3.5: <strong className="text-white">Ready</strong></span>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
+  /* Populated Synthesis Report */
   return (
     <div className={cn("px-4 sm:px-6 py-5 space-y-1 animate-fade-in")}>
       {/* Research Question Header Badge */}
       {activeQuery && (
-        <div className="flex items-center gap-2 mb-4 pb-3 border-b border-white/[0.10]">
-          <BookOpen className="h-4 w-4 text-cyan-400 shrink-0" />
-          <span className="text-xs text-[#94A3B8]">Research Topic:</span>
-          <span className="text-xs text-[#F8FAFC] font-semibold">{activeQuery}</span>
+        <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-white/[0.10]">
+          <div className="flex items-center gap-2 min-w-0">
+            <BookOpen className="h-4 w-4 text-cyan-400 shrink-0" />
+            <span className="text-xs text-[#94A3B8] shrink-0">Research Topic:</span>
+            <span className="text-xs text-white font-bold truncate">{activeQuery}</span>
+          </div>
+          <span className="rounded bg-cyan-400/10 px-2 py-0.5 text-[10px] font-mono text-cyan-300 border border-cyan-400/25 shrink-0">
+            Grounded RAG
+          </span>
         </div>
       )}
 
