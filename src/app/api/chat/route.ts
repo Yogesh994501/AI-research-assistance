@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 import type { Paper } from "@/types";
 
+const MODEL_CASCADE = [
+  process.env.LLM_MODEL || "gemini-3.5-flash",
+  "gemini-2.5-flash-lite",
+  "gemini-flash-latest",
+  "gemini-3.7-flash",
+  "gemini-pro-latest",
+];
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -33,8 +41,6 @@ ${paperContext || "No specific papers retrieved yet. Answer using general schola
 
     if (apiKey) {
       const ai = new GoogleGenAI({ apiKey });
-      const model = process.env.LLM_MODEL || "gemini-3.5-flash";
-
       const prompt = `Conversation history:
 ${(history as Array<{ role: string; content: string }>)
   .map((h) => `${h.role === "user" ? "User" : "Assistant"}: ${h.content}`)
@@ -43,22 +49,30 @@ ${(history as Array<{ role: string; content: string }>)
 User: ${message}
 Assistant:`;
 
-      const response = await ai.models.generateContent({
-        model,
-        contents: prompt,
-        config: {
-          systemInstruction,
-          temperature: 0.3,
-          maxOutputTokens: 2048,
-        },
-      });
+      const modelsToTry = Array.from(new Set(MODEL_CASCADE));
 
-      return NextResponse.json({
-        reply: response.text || "I was unable to generate a response. Please try rephrasing your question.",
-      });
+      for (const model of modelsToTry) {
+        try {
+          const response = await ai.models.generateContent({
+            model,
+            contents: prompt,
+            config: {
+              systemInstruction,
+              temperature: 0.3,
+              maxOutputTokens: 2048,
+            },
+          });
+
+          if (response.text) {
+            return NextResponse.json({ reply: response.text });
+          }
+        } catch (modelErr) {
+          console.warn(`[API/Chat] Model ${model} failed, trying next cascade model...`);
+        }
+      }
     }
 
-    // Smart context-grounded fallback response if no API key is set
+    // Smart context-grounded fallback response if no API key is set or all endpoints overloaded
     const queryLower = message.toLowerCase();
     let reply = "";
 

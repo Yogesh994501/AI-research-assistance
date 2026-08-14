@@ -59,7 +59,16 @@ Evidence-based next steps suggested by the literature.
 ### References
 List all cited papers matching their respective [1], [2] indices.`;
 
-/** Synthesize a grounded research report using Google Gemini */
+/** Candidate models cascade in order of preference if primary experiences high demand / 503 */
+const MODEL_CASCADE = [
+  process.env.LLM_MODEL || "gemini-3.5-flash",
+  "gemini-2.5-flash-lite",
+  "gemini-flash-latest",
+  "gemini-3.7-flash",
+  "gemini-pro-latest",
+];
+
+/** Synthesize a grounded research report with automatic multi-model overload failover */
 export async function synthesizeWithGemini(query: string, papers: Paper[]): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
 
@@ -73,9 +82,7 @@ export async function synthesizeWithGemini(query: string, papers: Paper[]): Prom
     throw new Error("No academic evidence provided for synthesis.");
   }
 
-  const model = process.env.LLM_MODEL || "gemini-3.5-flash";
   const context = buildPaperContext(papers);
-
   const userPrompt = `Research Question: "${query}"
 
 Below are ${papers.length} peer-reviewed or preprint academic papers retrieved from scholarly repositories. Synthesize a comprehensive, strictly grounded research report addressing the research question based ONLY on this evidence.
@@ -83,20 +90,37 @@ Below are ${papers.length} peer-reviewed or preprint academic papers retrieved f
 ${context}`;
 
   const ai = new GoogleGenAI({ apiKey });
-  const response = await ai.models.generateContent({
-    model,
-    contents: userPrompt,
-    config: {
-      systemInstruction: SYSTEM_PROMPT,
-      temperature: 0.2,
-      maxOutputTokens: 4096,
-    },
-  });
+  let lastError: Error | null = null;
 
-  const text = response.text;
-  if (!text || text.trim().length === 0) {
-    throw new Error("Gemini returned an empty synthesis response. Please retry.");
+  // Deduplicate cascade list
+  const modelsToTry = Array.from(new Set(MODEL_CASCADE));
+
+  for (const model of modelsToTry) {
+    try {
+      console.log(`[Gemini] Attempting synthesis with model: ${model}`);
+      const response = await ai.models.generateContent({
+        model,
+        contents: userPrompt,
+        config: {
+          systemInstruction: SYSTEM_PROMPT,
+          temperature: 0.2,
+          maxOutputTokens: 4096,
+        },
+      });
+
+      const text = response.text;
+      if (text && text.trim().length > 0) {
+        console.log(`[Gemini] Synthesis successful using: ${model}`);
+        return text;
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn(`[Gemini] Model ${model} unavailable (${msg}). Cascading to next candidate...`);
+      lastError = err instanceof Error ? err : new Error(msg);
+      // Brief pause before trying next candidate
+      await new Promise((r) => setTimeout(r, 400));
+    }
   }
 
-  return text;
+  throw lastError || new Error("All Gemini model endpoints are currently experiencing high demand. Please try again in a few moments.");
 }
