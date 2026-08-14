@@ -73,7 +73,7 @@ export async function synthesizeWithGemini(query: string, papers: Paper[]): Prom
     throw new Error("No academic evidence provided for synthesis.");
   }
 
-  const model = process.env.LLM_MODEL || "gemini-2.5-flash";
+  const model = process.env.LLM_MODEL || "gemini-3.5-flash";
   const context = buildPaperContext(papers);
 
   const userPrompt = `Research Question: "${query}"

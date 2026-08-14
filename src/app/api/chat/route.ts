@@ -33,7 +33,7 @@ ${paperContext || "No specific papers retrieved yet. Answer using general schola
 
     if (apiKey) {
       const ai = new GoogleGenAI({ apiKey });
-      const model = process.env.LLM_MODEL || "gemini-2.5-flash";
+      const model = process.env.LLM_MODEL || "gemini-3.5-flash";
 
       const prompt = `Conversation history:
 ${(history as Array<{ role: string; content: string }>)
