@@ -3,14 +3,16 @@
 import { useState } from "react";
 import AgentStateOrb from "@/components/agent/AgentStateOrb";
 import AgentWorkflow from "@/components/agent/AgentWorkflow";
-import SlideDeckModal from "@/components/generators/SlideDeckModal";
-import BibtexModal from "@/components/generators/BibtexModal";
-import PodcastModal from "@/components/generators/PodcastModal";
+import SlideDeckPanel from "@/components/generators/SlideDeckPanel";
+import BibtexPanel from "@/components/generators/BibtexPanel";
+import PodcastPanel from "@/components/generators/PodcastPanel";
 import { Presentation, FileDown, Headphones, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+type MobileAgentView = "agent" | "slides" | "bibtex" | "podcast";
+
 export default function MobileAgent() {
-  const [activeModal, setActiveModal] = useState<"slides" | "bibtex" | "podcast" | null>(null);
+  const [activeView, setActiveView] = useState<MobileAgentView>("agent");
 
   const GENERATORS = [
     {
@@ -36,8 +38,32 @@ export default function MobileAgent() {
     },
   ];
 
+  if (activeView === "slides") {
+    return (
+      <div className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-zinc-800/80 bg-zinc-950/90 backdrop-blur-xl shadow-2xl animate-fade-in">
+        <SlideDeckPanel onBack={() => setActiveView("agent")} />
+      </div>
+    );
+  }
+
+  if (activeView === "bibtex") {
+    return (
+      <div className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-zinc-800/80 bg-zinc-950/90 backdrop-blur-xl shadow-2xl animate-fade-in">
+        <BibtexPanel onBack={() => setActiveView("agent")} />
+      </div>
+    );
+  }
+
+  if (activeView === "podcast") {
+    return (
+      <div className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-zinc-800/80 bg-zinc-950/90 backdrop-blur-xl shadow-2xl animate-fade-in">
+        <PodcastPanel onBack={() => setActiveView("agent")} />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex h-full flex-col overflow-y-auto rounded-xl border border-zinc-800/80 bg-zinc-950/60 p-3 backdrop-blur-xl">
+    <div className="flex h-full flex-col overflow-y-auto rounded-xl border border-zinc-800/80 bg-zinc-950/60 p-3 backdrop-blur-xl animate-fade-in">
       {/* 2D State Orb */}
       <AgentStateOrb />
 
@@ -55,7 +81,7 @@ export default function MobileAgent() {
           {GENERATORS.map((gen) => (
             <button
               key={gen.id}
-              onClick={() => setActiveModal(gen.id)}
+              onClick={() => setActiveView(gen.id)}
               className={cn(
                 "flex items-center gap-3 rounded-xl border p-3 text-left transition",
                 "border-zinc-800/60 bg-zinc-900/60 active:scale-[0.98] hover:bg-zinc-800/60 hover:border-zinc-700"
@@ -73,11 +99,6 @@ export default function MobileAgent() {
           ))}
         </div>
       </div>
-
-      {/* Generator Modals */}
-      <SlideDeckModal isOpen={activeModal === "slides"} onClose={() => setActiveModal(null)} />
-      <BibtexModal isOpen={activeModal === "bibtex"} onClose={() => setActiveModal(null)} />
-      <PodcastModal isOpen={activeModal === "podcast"} onClose={() => setActiveModal(null)} />
     </div>
   );
 }
