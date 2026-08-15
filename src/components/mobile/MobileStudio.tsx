@@ -7,21 +7,23 @@ import AiChatPanel from "@/components/research/AiChatPanel";
 import BottomSheet from "./BottomSheet";
 import SourceInspector from "@/components/research/SourceInspector";
 import { FileText, Bot, Download, RotateCcw } from "lucide-react";
+import { generateFullPaperMarkdown } from "@/lib/citations";
 import { cn } from "@/lib/utils";
 
 type StudioView = "report" | "chat";
 
 export default function MobileStudio() {
-  const { selectedPaper, setSelectedPaper, synthesisReport, activeQuery, executeSearch, isLoading } = useResearchStore();
+  const { selectedPaper, setSelectedPaper, synthesisReport, papers, activeQuery, executeSearch, isLoading } = useResearchStore();
   const [activeView, setActiveView] = useState<StudioView>("report");
 
   const handleExportMarkdown = () => {
     if (!synthesisReport) return;
-    const blob = new Blob([synthesisReport], { type: "text/markdown" });
+    const fullPaper = generateFullPaperMarkdown(synthesisReport, papers, activeQuery);
+    const blob = new Blob([fullPaper], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `Synthesis-${(activeQuery || "Research").slice(0, 30)}.md`;
+    a.download = `Research-Paper-${(activeQuery || "Synthesis").slice(0, 30).replace(/[^a-zA-Z0-9_-]/g, "_")}.md`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -64,7 +66,7 @@ export default function MobileStudio() {
             <button
               onClick={handleExportMarkdown}
               className="btn-secondary flex items-center justify-center rounded-lg p-1.5 active:scale-95"
-              title="Download Markdown"
+              title="Download Full Paper with References"
             >
               <Download className="h-3.5 w-3.5 shrink-0" />
             </button>

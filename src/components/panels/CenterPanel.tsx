@@ -5,21 +5,23 @@ import { useResearchStore } from "@/store/researchStore";
 import SynthesisReport from "@/components/research/SynthesisReport";
 import AiChatPanel from "@/components/research/AiChatPanel";
 import { FileText, Bot, Download, RotateCcw, AlertCircle, RefreshCw } from "lucide-react";
+import { generateFullPaperMarkdown } from "@/lib/citations";
 import { cn } from "@/lib/utils";
 
 type CenterView = "report" | "chat";
 
 export default function CenterPanel() {
-  const { error, resetResearch, synthesisReport, activeQuery, executeSearch, isLoading } = useResearchStore();
+  const { error, resetResearch, synthesisReport, papers, activeQuery, executeSearch, isLoading } = useResearchStore();
   const [activeView, setActiveView] = useState<CenterView>("report");
 
   const handleExportMarkdown = () => {
     if (!synthesisReport) return;
-    const blob = new Blob([synthesisReport], { type: "text/markdown" });
+    const fullPaper = generateFullPaperMarkdown(synthesisReport, papers, activeQuery);
+    const blob = new Blob([fullPaper], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `Synthesis-${(activeQuery || "Research").slice(0, 30)}.md`;
+    a.download = `Research-Paper-${(activeQuery || "Synthesis").slice(0, 30).replace(/[^a-zA-Z0-9_-]/g, "_")}.md`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -72,10 +74,10 @@ export default function CenterPanel() {
             <button
               onClick={handleExportMarkdown}
               className="btn-secondary flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium"
-              title="Download report as Markdown"
+              title="Download full research paper with references as Markdown"
             >
               <Download className="h-3 w-3 shrink-0" />
-              <span>Export .md</span>
+              <span>Download Paper (.md)</span>
             </button>
           )}
 

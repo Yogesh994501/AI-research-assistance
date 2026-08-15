@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
@@ -13,12 +13,16 @@ import {
   Cpu,
   Layers,
   ArrowRight,
-  Database,
+  ExternalLink,
+  Download,
+  Bookmark,
+  FileText,
+  Link2,
 } from "lucide-react";
 import { useResearchStore } from "@/store/researchStore";
 import { getCitedPaper } from "@/lib/citations";
 import CitationBadge from "./CitationBadge";
-import { cn } from "@/lib/utils";
+import { cn, formatCount } from "@/lib/utils";
 
 interface TextWithCitationsProps {
   content: string;
@@ -50,11 +54,22 @@ function TextWithCitations({ content, onCitationClick }: TextWithCitationsProps)
 
 export default function SynthesisReport() {
   const { synthesisReport, papers, activeQuery, isLoading, setSelectedPaper } = useResearchStore();
+  const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
 
   const handleCitationClick = useCallback(
     (index: number) => {
       const paper = getCitedPaper(index, papers);
-      if (paper) setSelectedPaper(paper);
+      if (paper) {
+        // Smooth scroll to the reference card at the bottom of the studio
+        const refElement = document.getElementById(`reference-${index}`);
+        if (refElement) {
+          refElement.scrollIntoView({ behavior: "smooth", block: "center" });
+          setHighlightedIndex(index);
+          setTimeout(() => setHighlightedIndex(null), 3000);
+        } else {
+          setSelectedPaper(paper);
+        }
+      }
     },
     [papers, setSelectedPaper]
   );
@@ -268,12 +283,12 @@ export default function SynthesisReport() {
     );
   }
 
-  /* Populated Synthesis Report */
+  /* Populated Synthesis Report with Integrated Bottom References Section */
   return (
-    <div className={cn("px-4 sm:px-6 py-5 space-y-1 animate-fade-in")}>
+    <div className={cn("px-4 sm:px-6 py-5 space-y-6 animate-fade-in")}>
       {/* Research Question Header Badge */}
       {activeQuery && (
-        <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-white/[0.10]">
+        <div className="flex items-center justify-between gap-2 pb-3 border-b border-white/[0.10]">
           <div className="flex items-center gap-2 min-w-0">
             <BookOpen className="h-4 w-4 text-cyan-400 shrink-0" />
             <span className="text-xs text-[#94A3B8] shrink-0">Research Topic:</span>
@@ -285,10 +300,128 @@ export default function SynthesisReport() {
         </div>
       )}
 
-      {/* Markdown Body */}
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={customComponents}>
-        {synthesisReport}
-      </ReactMarkdown>
+      {/* Main Grounded Report Body */}
+      <div className="prose-report">
+        <ReactMarkdown remarkPlugins={[remarkGfm]} components={customComponents}>
+          {synthesisReport}
+        </ReactMarkdown>
+      </div>
+
+      {/* ─── AUTHENTIC RESEARCH PAPER REFERENCES & SOURCES SECTION (AT BOTTOM) ─── */}
+      {papers.length > 0 && (
+        <div className="pt-6 border-t border-white/[0.12] space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Bookmark className="h-4 w-4 text-cyan-400" />
+              <h2 className="text-sm sm:text-base font-bold text-white tracking-wide uppercase">
+                References & Primary Sources
+              </h2>
+            </div>
+            <span className="rounded-md bg-white/[0.06] px-2 py-0.5 text-[10px] font-mono text-cyan-300 border border-white/[0.10]">
+              {papers.length} Scholarly Citations
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            {papers.map((paper, idx) => {
+              const citeNum = idx + 1;
+              const isHighlighted = highlightedIndex === citeNum;
+
+              return (
+                <div
+                  key={paper.id}
+                  id={`reference-${citeNum}`}
+                  className={cn(
+                    "paper-card p-3.5 sm:p-4 transition-all duration-300 rounded-xl",
+                    isHighlighted
+                      ? "bg-cyan-500/20 border-cyan-400 shadow-[0_0_24px_rgba(34,211,238,0.30)] scale-[1.01]"
+                      : "bg-white/[0.04] border-white/[0.10] hover:border-cyan-400/40"
+                  )}
+                >
+                  <div className="flex items-start gap-3">
+                    {/* Citation Index Number Pill */}
+                    <span className="citation-pill shrink-0 px-2 py-0.5 text-xs font-mono font-bold mt-0.5">
+                      [{citeNum}]
+                    </span>
+
+                    {/* Paper Details */}
+                    <div className="flex-1 min-w-0">
+                      {/* Title */}
+                      <h4 className="text-xs sm:text-sm font-semibold text-white leading-snug">
+                        {paper.title}
+                      </h4>
+
+                      {/* Authors & Publication Year */}
+                      <p className="text-[11px] sm:text-xs text-[#CBD5E1] mt-1">
+                        {paper.authors.length > 0 ? paper.authors.join(", ") : "Unknown Authors"}
+                        {paper.year ? ` (${paper.year})` : ""}
+                      </p>
+
+                      {/* Meta badges and links */}
+                      <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[11px]">
+                        <span className="rounded bg-white/[0.08] px-2 py-0.5 text-[10px] font-mono text-cyan-300 border border-white/[0.08] uppercase">
+                          {paper.source === "arxiv" ? "arXiv Preprint" : paper.source === "openalex" ? "OpenAlex" : "Semantic Scholar"}
+                        </span>
+
+                        <span className="text-[#94A3B8] text-[11px]">
+                          {formatCount(paper.citationCount)} citations
+                        </span>
+
+                        {paper.doi && (
+                          <a
+                            href={`https://doi.org/${paper.doi}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-cyan-300 hover:text-cyan-200 underline underline-offset-2 ml-1"
+                          >
+                            <Link2 className="h-3 w-3" />
+                            <span>doi:{paper.doi}</span>
+                          </a>
+                        )}
+
+                        <div className="ml-auto flex items-center gap-1.5 pt-1 sm:pt-0">
+                          {paper.openAccessPdf && (
+                            <a
+                              href={paper.openAccessPdf}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn-primary inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium"
+                              title="Download open-access PDF"
+                            >
+                              <Download className="h-3 w-3" />
+                              <span>PDF</span>
+                            </a>
+                          )}
+                          {paper.url && (
+                            <a
+                              href={paper.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn-secondary inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium"
+                              title="View paper at source"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                              <span>Source</span>
+                            </a>
+                          )}
+                          <button
+                            onClick={() => setSelectedPaper(paper)}
+                            className="btn-secondary inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium"
+                            title="Inspect metadata & abstract"
+                          >
+                            <FileText className="h-3 w-3" />
+                            <span>Abstract</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

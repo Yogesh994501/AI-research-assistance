@@ -48,3 +48,47 @@ export function getCitedPaper(citationIndex: number, papers: Paper[]): Paper | n
   if (citationIndex < 1 || citationIndex > papers.length) return null;
   return papers[citationIndex - 1];
 }
+
+/** Format references into standard academic Markdown bibliography */
+export function formatBibliographyMarkdown(papers: Paper[]): string {
+  if (!papers || papers.length === 0) return "";
+
+  const lines = [
+    "## References & Sources",
+    "",
+  ];
+
+  papers.forEach((p, i) => {
+    const idx = i + 1;
+    const authors = p.authors.length > 0
+      ? p.authors.length > 3
+        ? `${p.authors.slice(0, 3).join(", ")}, et al.`
+        : p.authors.join(", ")
+      : "Anonymous";
+    const year = p.year ? ` (${p.year})` : "";
+    const source = p.source === "arxiv" ? "arXiv preprint" : p.source === "openalex" ? "OpenAlex Index" : "Semantic Scholar";
+    const doi = p.doi ? ` DOI: [${p.doi}](https://doi.org/${p.doi}).` : "";
+    const url = p.url ? ` Available: [${p.url}](${p.url}).` : "";
+
+    lines.push(`[${idx}] **${authors}**${year}. *${p.title}*. ${source}.${doi}${url}`);
+    lines.push("");
+  });
+
+  return lines.join("\n");
+}
+
+/** Generate a full academic research paper with embedded Bibliography at the bottom */
+export function generateFullPaperMarkdown(
+  synthesisReport: string,
+  papers: Paper[],
+  query?: string
+): string {
+  const title = query ? `# Research Synthesis: ${query}\n\n` : "";
+  const bibliography = formatBibliographyMarkdown(papers);
+
+  if (synthesisReport.includes("## References") || synthesisReport.includes("### References")) {
+    return `${title}${synthesisReport}`;
+  }
+
+  return `${title}${synthesisReport}\n\n---\n\n${bibliography}`;
+}
