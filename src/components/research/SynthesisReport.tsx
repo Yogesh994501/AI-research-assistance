@@ -18,18 +18,23 @@ import {
   Bookmark,
   FileText,
   Link2,
+  ArrowUp,
+  ArrowDown,
+  FileCheck,
 } from "lucide-react";
 import { useResearchStore } from "@/store/researchStore";
 import { getCitedPaper } from "@/lib/citations";
 import CitationBadge from "./CitationBadge";
 import { cn, formatCount } from "@/lib/utils";
+import type { Paper } from "@/types";
 
 interface TextWithCitationsProps {
   content: string;
-  onCitationClick: (index: number) => void;
+  papers: Paper[];
+  onCitationClick: (index: number, calloutId?: string) => void;
 }
 
-function TextWithCitations({ content, onCitationClick }: TextWithCitationsProps) {
+function TextWithCitations({ content, papers, onCitationClick }: TextWithCitationsProps) {
   const parts = content.split(/(\[\d+\])/g);
   return (
     <>
@@ -37,10 +42,14 @@ function TextWithCitations({ content, onCitationClick }: TextWithCitationsProps)
         const match = part.match(/^\[(\d+)\]$/);
         if (match) {
           const idx = parseInt(match[1], 10);
+          const paper = getCitedPaper(idx, papers);
+          const calloutId = `callout-${idx}-${i}`;
           return (
             <CitationBadge
               key={i}
               index={idx}
+              paper={paper}
+              calloutId={calloutId}
               onClick={onCitationClick}
               inline
             />
@@ -55,24 +64,39 @@ function TextWithCitations({ content, onCitationClick }: TextWithCitationsProps)
 export default function SynthesisReport() {
   const { synthesisReport, papers, activeQuery, isLoading, setSelectedPaper } = useResearchStore();
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
+  const [lastCalloutId, setLastCalloutId] = useState<string | null>(null);
 
   const handleCitationClick = useCallback(
-    (index: number) => {
-      const paper = getCitedPaper(index, papers);
-      if (paper) {
-        // Smooth scroll to the reference card at the bottom of the studio
-        const refElement = document.getElementById(`reference-${index}`);
-        if (refElement) {
-          refElement.scrollIntoView({ behavior: "smooth", block: "center" });
-          setHighlightedIndex(index);
-          setTimeout(() => setHighlightedIndex(null), 3000);
-        } else {
-          setSelectedPaper(paper);
-        }
+    (index: number, calloutId?: string) => {
+      if (calloutId) {
+        setLastCalloutId(calloutId);
+      }
+      const refElement = document.getElementById(`reference-${index}`);
+      if (refElement) {
+        refElement.scrollIntoView({ behavior: "smooth", block: "center" });
+        setHighlightedIndex(index);
+        setTimeout(() => setHighlightedIndex(null), 3000);
+      } else {
+        const paper = getCitedPaper(index, papers);
+        if (paper) setSelectedPaper(paper);
       }
     },
     [papers, setSelectedPaper]
   );
+
+  const handleScrollToCallout = useCallback((calloutId: string) => {
+    const el = document.getElementById(calloutId);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, []);
+
+  const handleScrollToBottomReferences = useCallback(() => {
+    const el = document.getElementById("academic-references-section");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, []);
 
   const customComponents = useMemo(() => ({
     h1: ({ children }: { children?: React.ReactNode }) => (
@@ -91,7 +115,7 @@ export default function SynthesisReport() {
       if (typeof children === "string") {
         return (
           <p className="mb-3.5 text-xs sm:text-[13px] leading-relaxed text-[#E2E8F0]">
-            <TextWithCitations content={children} onCitationClick={handleCitationClick} />
+            <TextWithCitations content={children} papers={papers} onCitationClick={handleCitationClick} />
           </p>
         );
       }
@@ -101,7 +125,7 @@ export default function SynthesisReport() {
       if (typeof children === "string") {
         return (
           <li className="mb-2 text-xs sm:text-[13px] leading-relaxed text-[#E2E8F0]">
-            <TextWithCitations content={children} onCitationClick={handleCitationClick} />
+            <TextWithCitations content={children} papers={papers} onCitationClick={handleCitationClick} />
           </li>
         );
       }
@@ -144,7 +168,7 @@ export default function SynthesisReport() {
     code: ({ children }: { children?: React.ReactNode }) => (
       <code className="rounded bg-white/[0.08] px-1.5 py-0.5 font-mono text-[11px] text-cyan-300 border border-white/[0.08]">{children}</code>
     ),
-  }), [handleCitationClick]);
+  }), [papers, handleCitationClick]);
 
   /* Loading State */
   if (isLoading) {
@@ -285,8 +309,8 @@ export default function SynthesisReport() {
 
   /* Populated Synthesis Report with Integrated Bottom References Section */
   return (
-    <div className={cn("px-4 sm:px-6 py-5 space-y-6 animate-fade-in")}>
-      {/* Research Question Header Badge */}
+    <div className={cn("relative px-4 sm:px-6 py-5 space-y-6 animate-fade-in")}>
+      {/* Research Question Header Badge & Quick References Jump Button */}
       {activeQuery && (
         <div className="flex items-center justify-between gap-2 pb-3 border-b border-white/[0.10]">
           <div className="flex items-center gap-2 min-w-0">
@@ -294,9 +318,21 @@ export default function SynthesisReport() {
             <span className="text-xs text-[#94A3B8] shrink-0">Research Topic:</span>
             <span className="text-xs text-white font-bold truncate">{activeQuery}</span>
           </div>
-          <span className="rounded bg-cyan-400/10 px-2 py-0.5 text-[10px] font-mono text-cyan-300 border border-cyan-400/25 shrink-0">
-            Grounded RAG
-          </span>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={handleScrollToBottomReferences}
+              className="btn-secondary flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium"
+              title="Jump down to References & Sources at bottom of paper"
+            >
+              <ArrowDown className="h-3.5 w-3.5 text-cyan-400" />
+              <span>Jump to Sources ({papers.length})</span>
+            </button>
+
+            <span className="hidden sm:inline-flex rounded bg-cyan-400/10 px-2 py-0.5 text-[10px] font-mono text-cyan-300 border border-cyan-400/25">
+              Grounded RAG
+            </span>
+          </div>
         </div>
       )}
 
@@ -309,17 +345,26 @@ export default function SynthesisReport() {
 
       {/* ─── AUTHENTIC RESEARCH PAPER REFERENCES & SOURCES SECTION (AT BOTTOM) ─── */}
       {papers.length > 0 && (
-        <div className="pt-6 border-t border-white/[0.12] space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Bookmark className="h-4 w-4 text-cyan-400" />
-              <h2 className="text-sm sm:text-base font-bold text-white tracking-wide uppercase">
-                References & Primary Sources
-              </h2>
+        <div id="academic-references-section" className="pt-8 border-t border-white/[0.15] space-y-4 scroll-mt-6">
+          <div className="flex flex-wrap items-center justify-between gap-2 bg-white/[0.02] p-3 rounded-xl border border-white/[0.08]">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-cyan-400/30 bg-cyan-400/10 text-cyan-400">
+                <Bookmark className="h-3.5 w-3.5" />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-white tracking-wide uppercase">
+                  References & Sources
+                </h2>
+                <p className="text-[10px] text-[#94A3B8]">
+                  Peer-reviewed literature cited inline across this synthesis
+                </p>
+              </div>
             </div>
-            <span className="rounded-md bg-white/[0.06] px-2 py-0.5 text-[10px] font-mono text-cyan-300 border border-white/[0.10]">
-              {papers.length} Scholarly Citations
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="rounded-md bg-cyan-400/10 px-2.5 py-1 text-[11px] font-mono text-cyan-300 border border-cyan-400/30 font-semibold">
+                {papers.length} Sources Cited
+              </span>
+            </div>
           </div>
 
           <div className="space-y-3">
@@ -332,7 +377,7 @@ export default function SynthesisReport() {
                   key={paper.id}
                   id={`reference-${citeNum}`}
                   className={cn(
-                    "paper-card p-3.5 sm:p-4 transition-all duration-300 rounded-xl",
+                    "paper-card p-3.5 sm:p-4 transition-all duration-300 rounded-xl scroll-mt-10",
                     isHighlighted
                       ? "bg-cyan-500/20 border-cyan-400 shadow-[0_0_24px_rgba(34,211,238,0.30)] scale-[1.01]"
                       : "bg-white/[0.04] border-white/[0.10] hover:border-cyan-400/40"
@@ -340,7 +385,7 @@ export default function SynthesisReport() {
                 >
                   <div className="flex items-start gap-3">
                     {/* Citation Index Number Pill */}
-                    <span className="citation-pill shrink-0 px-2 py-0.5 text-xs font-mono font-bold mt-0.5">
+                    <span className="citation-pill shrink-0 px-2 py-0.5 text-xs font-mono font-bold mt-0.5 shadow-sm">
                       [{citeNum}]
                     </span>
 
@@ -380,6 +425,18 @@ export default function SynthesisReport() {
                         )}
 
                         <div className="ml-auto flex items-center gap-1.5 pt-1 sm:pt-0">
+                          {/* Back to reading in text */}
+                          {lastCalloutId && (
+                            <button
+                              onClick={() => handleScrollToCallout(lastCalloutId)}
+                              className="btn-secondary inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium text-cyan-300"
+                              title="Jump back to where you were reading in text"
+                            >
+                              <ArrowUp className="h-3 w-3" />
+                              <span>Back to Text</span>
+                            </button>
+                          )}
+
                           {paper.openAccessPdf && (
                             <a
                               href={paper.openAccessPdf}
